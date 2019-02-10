@@ -11,6 +11,8 @@ contract Atola is DSMath {
 		address internal basecurrency; // 0xb4272071ecadd69d933adcd19ca99fe80664fc08 for xCHF
 		address internal baseexchange; // 0x8de0d002dc83478f479dc31f76cb0a8aa7ccea17 for xCHF
 		mapping(address => bool) private BtmAddresses;
+		mapping(address => uint) private buyFee;
+		mapping(address => uint) private sellFee;
 		event OwnershipTransferred(address previousOwner, address payable newOwner);
 
 		// TO-DO check which fields we need in the event log and whether we can have addresses as indexed
@@ -65,20 +67,30 @@ contract Atola is DSMath {
 	  /**
 	   * @dev Allows the owner to add/remove a trusted BTM address
 	   * @param _newBtmAddress The address of the new BTM
+		 * @param _state Whether the machine is enabled or disabled
+		 * @param _buyFee Default buy fee on this machine
+		 * @param _sellFee Default sell fee on this machine
 	   */
-	    function modifyBtm(address _newBtmAddress, bool state) public onlyOwner {
-	        BtmAddresses[_newBtmAddress] = state;
+	    function modifyBtm(address _newBtmAddress, bool _state, uint _buyFee, uint _sellFee) public onlyOwner {
+	        BtmAddresses[_newBtmAddress] = _state;
+					buyFee[_newBtmAddress] = _buyFee;
+					sellFee[_newBtmAddress] = _sellFee;
 	    }
 
-			// TO-DO:  Use price oracle with signature
+		/**
+	   * @dev Allows the machine to submit a fiat -> eth order
+	   * @param _amountFiat Amount of fiat machine reports to have recieved
+		 * @param _userAddress Users crypto address
+	   */
     function FiatToEth(uint _amountFiat, address payable _userAddress) external onlyBtm returns(bool){
 				// this assumes _exchangeRate is passed in as wad already
 				// uint netAmountWad = wmul(_amountFiat * 10 ** 18, _exchangeRate);
 				// uint netAmount = netAmountWad / (10 ** 18);
-
+				uint fee = _amountFiat * buyFee[msg.sender] / 1000; //(eg 1.2 percent -> 12)
+				require(_amountFiat > fee);
 				//call approve
 				IERC20 tok = IERC20(basecurrency);
-				tok.approve(address(this), _amountFiat);
+				tok.approve(address(this), _amountFiat - fee);
 
 				//call uniswap
 				UniswapExchangeInterface ex = UniswapExchangeInterface(baseexchange);
@@ -93,7 +105,13 @@ contract Atola is DSMath {
 				emit CryptoBought(_userAddress, _amountFiat);
     }
 
+		/**
+	   * @dev Allows the machine to submit a fiat -> tokens order
+	   * @param _amountFiat Amount of fiat machine reports to have recieved
+		 * @param _userAddress Users crypto address
+	   */
 		function FiatToTokens(uint _amountFiat, address payable _userAddress) external onlyBtm returns(bool){
+  			uint fee = _amountFiat * buyFee[msg.sender] / 1000; //(eg 1.2 percent -> 12)
 				//call approve
 				IERC20 tok = IERC20(basecurrency);
 				tok.approve(address(this), _amountFiat);
@@ -107,20 +125,43 @@ contract Atola is DSMath {
 
 		// Owner Functions
 
+		/**
+	   * @dev Allows the owner to withdraw eth from the contract to the owner address
+	   * @param _amount Amount of of eth to withdraw (in wei)
+	   */
 		function withdrawEth(uint _amount) external onlyOwner {
+			  owner.transfer(_amount);
+    }
+
+		/**
+	   * @dev Allows the owner to withdraw tokens from the contract to the owner address
+	   * @param _amount Amount of of tokens to withdraw (in wei)
+	   */
+		function withdrawBaseTokens(uint _amount) external onlyOwner {
 			  IERC20 tok = IERC20(basecurrency);
 	      tok.transfer(owner, _amount);
     }
 
-		function withdrawTokens(uint _amount) external onlyOwner {
-			  IERC20 tok = IERC20(basecurrency);
+		/**
+	   * @dev Allows the owner to withdraw tokens from the contract to the owner address
+	   * @param _amount Amount of of tokens to withdraw (in wei)
+	   */
+		function withdrawTokens(address token, uint _amount) external onlyOwner {
+			  IERC20 tok = IERC20(token);
 	      tok.transfer(owner, _amount);
     }
 
+		/**
+	   * @dev Allows owner to lookup token balance of contract
+	   */
 		function TokenBalanceAmount() external view onlyOwner returns(uint){
 				IERC20 tok = IERC20(basecurrency);
 				return tok.balanceOf(owner);
     }
+
+		/**
+	   * @dev Allows owner to lookup eth balance of contract
+	   */
     function EthBalanceAmount() external view onlyOwner returns(uint){
         return(address(this).balance);
     }
