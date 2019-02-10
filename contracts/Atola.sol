@@ -175,6 +175,11 @@ contract Atola is DSMath {
 			Ideally, esp if using reciever contracts we could handle transfer of erc20 (easier for user), while the machine waits for transfer event.  Some user safety can be included in the reciever contract (for them to claim their tokens back)
 		- Ensure a way for owner to withdraw even non compliant tokens so they dont get stuck */
 
+		/**
+	   * @dev Allows customer to claim refund if order hasn't been processed
+	   * @param _user Customer address
+		 * @param _amount Refund amount
+	   */
     function refund(address payable _user, uint _amount) public{
         require(msg.sender == _user);
         require(UserToAmountCrypto[_user] > _amount);
@@ -183,16 +188,28 @@ contract Atola is DSMath {
 				emit CancelledRefund(_user, _amount);
     }
 
+		/**
+	   * @dev Allows customer to sell eth (needs to have already sent eth to the contract).  Called by the machine.
+	   * @param _user Customer address
+		 * @param _amountCrypto Amount to process
+	   */
     function CryptoToFiat(address _user, uint _amountCrypto) public onlyBtm {
         require(UserToAmountCrypto[_user] > _amountCrypto);
         UserToAmountCrypto[_user] -= _amountCrypto;
 				emit CryptoSold(_user, _amountCrypto);
     }
 
+		/**
+	   * @dev Shows the amount of ETH from customer pending sale
+	   * @param _user Customer crypto address
+	   */
     function AmountForAddress(address _user) public view onlyBtm returns(uint) {
         return(UserToAmountCrypto[_user]);
     }
 
+		/**
+		 * @dev Fallback payable function.  When customer send eth to the contract take note so we can use it to process a transaction.
+		 */
     function () external payable {
         UserToAmountCrypto[msg.sender] += msg.value;
     }
