@@ -1,4 +1,4 @@
-pragma solidity 0.5.0;
+pragma solidity ^0.5.2;
 
 /// import "./ConvertLib.sol";
 import "./math.sol";
@@ -114,11 +114,25 @@ contract Atola is DSMath {
   			uint fee = _amountFiat * buyFee[msg.sender] / 1000; //(eg 1.2 percent -> 12)
 				//call approve
 				IERC20 tok = IERC20(basecurrency);
-				tok.approve(address(this), _amountFiat);
+				tok.approve(address(baseexchange), _amountFiat);
 				//call uniswap
 				UniswapExchangeInterface ex = UniswapExchangeInterface(baseexchange);
 
 				//ex.tokenToTokenTransferInput(tokens_sold: uint256, min_tokens_bought: uint256, min_eth_bought: uint256(wei), deadline: timestamp, recipient: address, token_addr: address)
+
+				emit CryptoBought(_userAddress, _amountFiat);
+		}
+
+		/**
+	   * @dev Allows the machine to submit a fiat -> basetoken order
+	   * @param _amountFiat Amount of fiat machine reports to have recieved
+		 * @param _userAddress Users crypto address
+	   */
+		function FiatToBaseTokens(uint _amountFiat, address payable _userAddress) external onlyBtm returns(bool){
+  			uint fee = _amountFiat * buyFee[msg.sender] / 1000; //(eg 1.2 percent -> 12)
+				//call transfer
+				IERC20 tok = IERC20(basecurrency);
+				tok.transfer(address(this), _amountFiat - fee);
 
 				emit CryptoBought(_userAddress, _amountFiat);
 		}
