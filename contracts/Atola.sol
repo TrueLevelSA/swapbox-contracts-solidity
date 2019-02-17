@@ -90,7 +90,7 @@ contract Atola is DSMath {
 				require(_amountFiat > fee);
 				//call approve
 				IERC20 tok = IERC20(basecurrency);
-				tok.approve(address(this), _amountFiat - fee);
+				tok.approve(address(baseexchange), _amountFiat - fee);
 
 				//call uniswap
 				UniswapExchangeInterface ex = UniswapExchangeInterface(baseexchange);
