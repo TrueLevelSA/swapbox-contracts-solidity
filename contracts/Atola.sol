@@ -16,7 +16,7 @@ contract Atola is DSMath {
 		event OwnershipTransferred(address previousOwner, address payable newOwner);
 
 		// TO-DO check which fields we need in the event log and whether we can have addresses as indexed
-		event CryptoBought(address customerAddress, uint fiatAmount);
+		event CryptoBought(address customerAddress, uint fiatAmount, uint cryptoAmount);
 		event CryptoSold(address customerAddress, uint cryptoAmount);
 		event CancelledRefund(address customerAddress, uint cryptoAmount);
 
@@ -79,15 +79,14 @@ contract Atola is DSMath {
 
 		/**
 	   * @dev Allows the machine to submit a fiat -> eth order
-	   * @param _amountFiat Amount of fiat machine reports to have recieved
+	   * @param _amountFiat Amount of fiat machine reports to have recieved (18 decimal places)
 		 * @param _userAddress Users crypto address
 	   */
-    function FiatToEth(uint _amountFiat, address payable _userAddress) external onlyBtm returns(bool){
-				// this assumes _exchangeRate is passed in as wad already
-				// uint netAmountWad = wmul(_amountFiat * 10 ** 18, _exchangeRate);
-				// uint netAmount = netAmountWad / (10 ** 18);
-				uint fee = _amountFiat * buyFee[msg.sender] / 1000; //(eg 1.2 percent -> 12)
-				require(_amountFiat > fee);
+    function FiatToEth(uint _amountFiat, uint _tolerance, address payable _userAddress) external onlyBtm returns(bool){
+
+				require(buyFee[msg.sender] < 10000); // i dont think this is a good enough check, if it is we only need to do it once when setting fee
+				uint fee = (_amountFiat * buyFee[msg.sender]) / 10000; //(eg 1.2 percent -> 120)
+				/* require(_amountFiat > fee); */
 				//call approve
 				IERC20 tok = IERC20(basecurrency);
 				tok.approve(address(baseexchange), _amountFiat - fee);
@@ -95,46 +94,25 @@ contract Atola is DSMath {
 				//call uniswap
 				UniswapExchangeInterface ex = UniswapExchangeInterface(baseexchange);
 
-				/* # @param tokens_sold Amount of Tokens sold.
-				# @param min_eth Minimum ETH purchased.
-				# @param deadline Time after which this transaction can no longer be executed.
-				# @param recipient The address that receives output ETH.
-				# @return Amount of ETH bought. */
-				ex.tokenToEthTransferInput(_amountFiat, _amountFiat, block.timestamp, _userAddress);
+				uint ethBought = ex.tokenToEthTransferInput(_amountFiat - fee, _tolerance, block.timestamp, _userAddress);
 
-				emit CryptoBought(_userAddress, _amountFiat);
+				emit CryptoBought(_userAddress, _amountFiat, ethBought);
     }
 
-		/**
-	   * @dev Allows the machine to submit a fiat -> tokens order
-	   * @param _amountFiat Amount of fiat machine reports to have recieved
-		 * @param _userAddress Users crypto address
-	   */
-		function FiatToTokens(uint _amountFiat, address payable _userAddress) external onlyBtm returns(bool){
-  			uint fee = _amountFiat * buyFee[msg.sender] / 1000; //(eg 1.2 percent -> 12)
-				//call approve
-				IERC20 tok = IERC20(basecurrency);
-				tok.approve(address(baseexchange), _amountFiat);
-				//call uniswap
-				UniswapExchangeInterface ex = UniswapExchangeInterface(baseexchange);
-
-				//ex.tokenToTokenTransferInput(tokens_sold: uint256, min_tokens_bought: uint256, min_eth_bought: uint256(wei), deadline: timestamp, recipient: address, token_addr: address)
-
-				emit CryptoBought(_userAddress, _amountFiat);
-		}
 
 		/**
 	   * @dev Allows the machine to submit a fiat -> basetoken order
-	   * @param _amountFiat Amount of fiat machine reports to have recieved
+	   * @param _amountFiat Amount of fiat machine reports to have recieved (18 decimal places)
 		 * @param _userAddress Users crypto address
 	   */
 		function FiatToBaseTokens(uint _amountFiat, address payable _userAddress) external onlyBtm returns(bool){
-  			uint fee = _amountFiat * buyFee[msg.sender] / 1000; //(eg 1.2 percent -> 12)
+				require(buyFee[msg.sender] < 10000); // i dont think this is a good enough check, if it is we only need to do it once when setting fee
+				uint fee = (_amountFiat * buyFee[msg.sender]) / 10000; //(eg 1.2 percent -> 120)
 				//call transfer
 				IERC20 tok = IERC20(basecurrency);
-				tok.transfer(address(this), _amountFiat - fee);
+				tok.transfer(address(_userAddress), _amountFiat - fee);
 
-				emit CryptoBought(_userAddress, _amountFiat);
+				emit CryptoBought(_userAddress, _amountFiat, _amountFiat - fee);
 		}
 
 		// Owner Functions
@@ -180,17 +158,8 @@ contract Atola is DSMath {
         return(address(this).balance);
     }
 
-		// Selling crypto stuff.
-
-		// TO-DO:
-		/* - ?Use pool of reciever contracts so different customers send to different address? (you know for the idiots who dont read the screen and send from an exchange).
-			Ideally this is out of scope and we can require that people use an address they control
-		- Handle ERC20.  Lazy way is for customer to approve while the machine polls then calls some function with a transferfrom.
-			Ideally, esp if using reciever contracts we could handle transfer of erc20 (easier for user), while the machine waits for transfer event.  Some user safety can be included in the reciever contract (for them to claim their tokens back)
-		- Ensure a way for owner to withdraw even non compliant tokens so they dont get stuck */
-
 		/**
-	   * @dev Allows customer to claim refund if order hasn't been processed
+	   * @dev Allows customer to claim refund if order hasn't been processed (TO-DO add a delay to this to avoid double spend race)
 	   * @param _user Customer address
 		 * @param _amount Refund amount
 	   */
@@ -210,6 +179,12 @@ contract Atola is DSMath {
     function CryptoToFiat(address _user, uint _amountCrypto) public onlyBtm {
         require(UserToAmountCrypto[_user] > _amountCrypto);
         UserToAmountCrypto[_user] -= _amountCrypto;
+
+				//call uniswap
+				UniswapExchangeInterface ex = UniswapExchangeInterface(baseexchange);
+				//ethToTokenTransferInput(min_tokens: uint256, deadline: timestamp, recipient: address)
+				uint tokensBought = ex.ethToTokenTransferInput(_amountFiat - fee, _tolerance, block.timestamp, _userAddress);
+
 				emit CryptoSold(_user, _amountCrypto);
     }
 
