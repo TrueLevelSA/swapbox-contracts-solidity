@@ -92,10 +92,8 @@ contract Atola {
      * @param _amountFiat Amount of fiat machine reports to have recieved (18 decimal places)
      * @param _userAddress Users crypto address
     */
-    function fiatToEth(uint256 _amountFiat, uint256 _tolerance, address payable _userAddress) external onlyBtm returns (bool) {
-        require(buyFee[msg.sender] < 10000);
-
-        // i dont think this is a good enough check, if it is we only need to do it once when setting fee
+    function fiatToEth(uint256 _amountFiat, uint256 _tolerance, address _userAddress) external onlyBtm returns (bool) {
+        require(buyFee[msg.sender] < 10000); // i'm not sure this is a good enough check, if it is we only need to do it once when setting fee
         uint256 fee = (_amountFiat * buyFee[msg.sender]) / 10000;
         //(eg 1.2 percent -> 120)
         /* require(_amountFiat > fee); */
@@ -183,22 +181,23 @@ contract Atola {
     /**
      * @dev Allows customer to sell eth (needs to have already sent eth to the contract).  Called by the machine.
      * @param _user Customer address
-     * @param _amountCrypto Amount to process
+     * @param _amountFiat Amount to process
     */
-    function CryptoToFiat(address _user, uint256 _amountCrypto, uint256 _tolerance) public onlyBtm {
-        require(UserToAmountCrypto[_user] > _amountCrypto);
-        UserToAmountCrypto[_user] -= _amountCrypto;
+    function CryptoToFiat(address payable _user, uint256 _amountFiat) public onlyBtm {
 
-        require(buyFee[msg.sender] < 10000); // i dont think this is a good enough check, if it is we only need to do it once when setting fee
-        uint256 fee = (_amountCrypto * sellFee[msg.sender]) / 10000;
+        require(sellFee[msg.sender] < 10000); // i'm not sure if this is a good enough check, if it is we only need to do it once when setting fee
+        uint256 fee = (_amountFiat * sellFee[msg.sender]) / 10000;
         //call uniswap
         UniswapExchangeInterface ex = UniswapExchangeInterface(baseexchange);
-        //ethToTokenTransferInput(min_tokens: uint256, deadline: timestamp, recipient: address)
 
-        // TO-DO: use transfer output probably?
-        uint256 tokensBought = ex.ethToTokenTransferInput.value(_amountCrypto - fee)(_tolerance, block.timestamp, _user);
+        uint256 ethSold = ex.ethToTokenTransferOutput.value(UserToAmountCrypto[_user])(_amountFiat + fee, block.timestamp, _user);
 
-        emit CryptoSale(_user, _amountCrypto, tokensBought);
+        UserToAmountCrypto[_user] -= ethSold;
+
+        // Send change to the users (this way requires the contract to hold some ether; the alternative is for the change to be processed on a seperate contract call :/)
+        _user.transfer(UserToAmountCrypto[_user]);
+
+        emit CryptoSale(_user, ethSold, _amountFiat);
     }
 
     /**
