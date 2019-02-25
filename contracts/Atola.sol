@@ -12,8 +12,8 @@ contract Atola {
     address[] public supportedTokens;
 
     mapping(address => bool) internal BtmAddresses;
-    mapping(address => uint256) internal buyFee;
-    mapping(address => uint256) internal sellFee;
+    mapping(address => uint256) internal buyFee; //(eg 1.2 percent -> 120)
+    mapping(address => uint256) internal sellFee; //(eg 1.2 percent -> 120)
 
     event OwnershipTransferred(address previousOwner, address payable newOwner);
 
@@ -21,12 +21,9 @@ contract Atola {
     event CryptoPurchase(address customerAddress, uint256 fiatAmount, uint256 cryptoAmount);
     event CryptoSale(address customerAddress, uint256 cryptoAmount, uint256 fiatAmount);
     event Refund(address customerAddress, uint256 cryptoAmount);
+    event EthRecieved(address customerAddress, uint256 cryptoAmount);
 
     /// uint256 dailyOutLimit = 5.1234567891012131 ether; /* Ether */
-    /* To buy, user put money in, and machine send fiat amount. We transfer the fiat using the oracle price */
-    /* To sell, user send to smart contract, smart contract makes a list of money input to address, and the ATM can ask for removing money owed to this address, to output cash.
-    User have a redeem code that machine links to the public address.
-    User can get direct refund by calling a function in smart contract.(to see) */
 
     mapping(address => uint256) internal UserToAmountCrypto;
 
@@ -95,8 +92,7 @@ contract Atola {
     function fiatToEth(uint256 _amountFiat, uint256 _tolerance, address _userAddress) external onlyBtm returns (bool) {
         require(buyFee[msg.sender] < 10000); // i'm not sure this is a good enough check, if it is we only need to do it once when setting fee
         uint256 fee = (_amountFiat * buyFee[msg.sender]) / 10000;
-        //(eg 1.2 percent -> 120)
-        /* require(_amountFiat > fee); */
+
         //call approve
         basetoken.approve(baseexchange, _amountFiat - fee);
 
@@ -114,10 +110,9 @@ contract Atola {
      * @param _userAddress Users crypto address
     */
     function fiatToBaseTokens(uint256 _amountFiat, address payable _userAddress) external onlyBtm returns (bool) {
-        require(buyFee[msg.sender] < 10000);
-        // i dont think this is a good enough check, if it is we only need to do it once when setting fee
+        require(buyFee[msg.sender] < 10000); // i'm not sure this is a good enough check, if it is we only need to do it once when setting fee
         uint256 fee = (_amountFiat * buyFee[msg.sender]) / 10000;
-        //(eg 1.2 percent -> 120)
+
         //call transfer
         basetoken.transfer(address(_userAddress), _amountFiat - fee);
 
@@ -194,7 +189,7 @@ contract Atola {
 
         UserToAmountCrypto[_user] -= ethSold;
 
-        // Send change to the users (this way requires the contract to hold some ether; the alternative is for the change to be processed on a seperate contract call :/)
+        // Send change to the user (this way requires the contract to hold some ether; the alternative is for the change to be processed on a seperate contract call :/)
         _user.transfer(UserToAmountCrypto[_user]);
 
         emit CryptoSale(_user, ethSold, _amountFiat);
@@ -213,6 +208,7 @@ contract Atola {
     */
     function() external payable {
         UserToAmountCrypto[msg.sender] += msg.value;
+        emit EthRecieved(msg.sender, msg.value);
     }
 
 
