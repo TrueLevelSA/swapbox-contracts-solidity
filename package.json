@@ -1,0 +1,28 @@
+{
+  "name": "smart-contract",
+  "version": "1.0.0",
+  "description": "README ======",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "truffle": "^5.0.3"
+  },
+  "devDependencies": {
+    "solidity-docgen": "^0.1.0"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@gitlab.com/atola/smart-contract.git"
+  },
+  "author": "tshabs",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://gitlab.com/atola/smart-contract/issues"
+  },
+  "homepage": "https://gitlab.com/atola/smart-contract#readme"
+}
