@@ -7,11 +7,9 @@
     "test": "test"
   },
   "dependencies": {
-    "@digix/doxity-solc": "^0.6.1",
     "truffle": "^5.0.3"
   },
   "devDependencies": {
-    "@digix/doxity": "^0.5.2",
     "solidity-docgen": "^0.1.0"
   },
   "scripts": {
