@@ -77,11 +77,19 @@ contract Atola {
     }
 
     /**
-     * @dev Allows the owner to add/remove a trusted BTM address
+     * @dev Allows the owner to add a trusted token address
      * @param _token The address of the token contract (warning: make sure it's compliant)
     */
     function addToken(address _token) external onlyOwner {
         supportedTokens.push(_token);
+    }
+
+    /**
+     * @dev Allows the owner to add/remove a trusted BTM address
+     * @param _token The address of the token contract (warning: make sure it's compliant)
+    */
+    function tokenEnabled(address _token) external view returns (bool) {
+        return true;//supportedTokens[_token];
     }
 
     /**
@@ -178,7 +186,7 @@ contract Atola {
      * @param _user Customer address
      * @param _amountFiat Amount to process
     */
-    function CryptoToFiat(address payable _user, uint256 _amountFiat) public onlyBtm {
+    function ethToFiat(address payable _user, uint256 _amountFiat) public onlyBtm {
 
         require(sellFee[msg.sender] < 10000); // i'm not sure if this is a good enough check, if it is we only need to do it once when setting fee
         uint256 fee = (_amountFiat * sellFee[msg.sender]) / 10000;
@@ -189,7 +197,7 @@ contract Atola {
 
         UserToAmountCrypto[_user] -= ethSold;
 
-        // Send change to the user (this way requires the contract to hold some ether; the alternative is for the change to be processed on a seperate contract call :/)
+        // Send change to the user (the alternative is for the change to be processed on a seperate contract call :/)
         _user.transfer(UserToAmountCrypto[_user]);
 
         emit CryptoSale(_user, ethSold, _amountFiat);
