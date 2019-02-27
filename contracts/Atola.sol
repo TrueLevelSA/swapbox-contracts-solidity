@@ -25,7 +25,7 @@ contract Atola {
 
     /// uint256 dailyOutLimit = 5.1234567891012131 ether; /* Ether */
 
-    mapping(address => uint256) internal UserToAmountCrypto;
+    mapping(address => uint256) internal customerBalance;
 
     /**
      * @dev The Atola constructor sets the original `owner` of the contract to the sender
@@ -175,9 +175,9 @@ contract Atola {
     */
     function refund(address payable _user, uint256 _amount) public {
         require(msg.sender == _user);
-        require(UserToAmountCrypto[_user] > _amount);
-        UserToAmountCrypto[_user] -= _amount;
-        _user.transfer(UserToAmountCrypto[_user]);
+        require(customerBalance[_user] > _amount);
+        customerBalance[_user] -= _amount;
+        _user.transfer(customerBalance[_user]);
         emit Refund(_user, _amount);
     }
 
@@ -193,12 +193,12 @@ contract Atola {
         //call uniswap
         UniswapExchangeInterface ex = UniswapExchangeInterface(baseexchange);
 
-        uint256 ethSold = ex.ethToTokenTransferOutput.value(UserToAmountCrypto[_user])(_amountFiat + fee, block.timestamp, _user);
+        uint256 ethSold = ex.ethToTokenTransferOutput.value(customerBalance[_user])(_amountFiat + fee, block.timestamp, _user);
 
-        UserToAmountCrypto[_user] -= ethSold;
+        customerBalance[_user] -= ethSold;
 
         // Send change to the user (the alternative is for the change to be processed on a seperate contract call :/)
-        _user.transfer(UserToAmountCrypto[_user]);
+        _user.transfer(customerBalance[_user]);
 
         emit CryptoSale(_user, ethSold, _amountFiat);
     }
@@ -208,14 +208,14 @@ contract Atola {
      * @param _user Customer crypto address
     */
     function AmountForAddress(address _user) public view onlyBtm returns (uint256) {
-        return (UserToAmountCrypto[_user]);
+        return (customerBalance[_user]);
     }
 
     /**
      * @dev Fallback payable function.  When customer send eth to the contract take note so we can use it to process a transaction.
     */
     function() external payable {
-        UserToAmountCrypto[msg.sender] += msg.value;
+        customerBalance[msg.sender] += msg.value;
         emit EthRecieved(msg.sender, msg.value);
     }
 
