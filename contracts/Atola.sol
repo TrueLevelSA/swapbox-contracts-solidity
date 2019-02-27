@@ -157,14 +157,14 @@ contract Atola {
     /**
      * @dev Allows owner to lookup token balance of contract
     */
-    function TokenBalanceAmount() external view onlyOwner returns (uint256) {
+    function tokenBalanceAmount() external view onlyOwner returns (uint256) {
         return basetoken.balanceOf(owner);
     }
 
     /**
      * @dev Allows owner to lookup eth balance of contract
     */
-    function EthBalanceAmount() external view onlyOwner returns (uint256) {
+    function ethBalanceAmount() external view onlyOwner returns (uint256) {
         return (address(this).balance);
     }
 
@@ -207,7 +207,7 @@ contract Atola {
      * @dev Shows the amount of ETH from customer pending sale
      * @param _user Customer crypto address
     */
-    function AmountForAddress(address _user) public view onlyBtm returns (uint256) {
+    function amountForAddress(address _user) public view onlyBtm returns (uint256) {
         return (customerBalance[_user]);
     }
 
