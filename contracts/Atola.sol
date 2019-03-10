@@ -70,10 +70,10 @@ contract Atola {
      * @param _buyFee Default buy fee on this machine
      * @param _sellFee Default sell fee on this machine
     */
-    function modifyBtm(address _newBtmAddress, bool _state, uint256 _buyFee, uint256 _sellFee) external onlyOwner {
-        BtmAddresses[_newBtmAddress] = _state;
-        buyFee[_newBtmAddress] = _buyFee;
-        sellFee[_newBtmAddress] = _sellFee;
+    function modifyBtm(address _btmAddress, bool _state, uint256 _buyFee, uint256 _sellFee) external onlyOwner {
+        BtmAddresses[_btmAddress] = _state;
+        buyFee[_btmAddress] = _buyFee;
+        sellFee[_btmAddress] = _sellFee;
     }
 
     /**
@@ -218,6 +218,4 @@ contract Atola {
         customerBalance[msg.sender] += msg.value;
         emit EthRecieved(msg.sender, msg.value);
     }
-
-
 }
