@@ -104,30 +104,31 @@ contract Atola {
 
     /**
      * @dev Allows the owner to add a trusted BTM address
-     * @param _btmAddress The address of the BTM
+     * @param _machineAddress The address of the BTM
     */
-    function addMachine(address _btmAddress) external onlyOwner {
-        uint256 len = machineAddressesArr.push(_btmAddress);
-        machineAddresses[_btmAddress] = len - 1;
+    function addMachine(address _machineAddress) external onlyOwner {
+        uint256 len = machineAddressesArr.push(_machineAddress);
+        machineAddresses[_machineAddress] = len - 1;
     }
 
     /**
      * @dev Allows the owner to remove a trusted BTM address
-     * @param _btmAddress The address of the BTM
+     * @param _machineAddress The address of the BTM
     */
-    function removeMachine(address _btmAddress) external onlyOwner {
-        removeMachineFromArrayAndMapping(_btmAddress);
+    function removeMachine(address _machineAddress) external onlyOwner {
+        //removeMachineFromArrayAndMapping(_machineAddress);
+        removeItemFromArrayAndMapping(machineAddressesArr, machineAddresses, _machineAddress);
     }
 
     /**
      * @dev Allows the owner to add/remove a trusted BTM address
-     * @param _btmAddress The address of the BTM
+     * @param _machineAddress The address of the BTM
      * @param _buyFee Default buy fee on this machine
      * @param _sellFee Default sell fee on this machine
     */
-    function modifyBtm(address _btmAddress, uint256 _buyFee, uint256 _sellFee) external onlyOwner {
-        buyFee[_btmAddress] = _buyFee;
-        sellFee[_btmAddress] = _sellFee;
+    function modifyBtm(address _machineAddress, uint256 _buyFee, uint256 _sellFee) external onlyOwner {
+        buyFee[_machineAddress] = _buyFee;
+        sellFee[_machineAddress] = _sellFee;
     }
 
     /**
@@ -140,11 +141,11 @@ contract Atola {
     }
 
     /**
-     * @dev Allows the owner to add/remove a trusted BTM address
-     * @param _token The address of the token contract (warning: make sure it's compliant)
+     * @dev Allows the owner to remove a supported token
+     * @param _tokenAddress The address of the token contract
     */
-    function tokenEnabled(address _token) external view returns (bool) {
-        return true;//supportedTokens[_token];
+    function removeToken(address _tokenAddress) external onlyOwner {
+        removeItemFromArrayAndMapping(supportedTokensArr, supportedTokens, _tokenAddress);
     }
 
     /**
@@ -202,6 +203,7 @@ contract Atola {
 
     /**
      * @dev Allows the owner to withdraw tokens from the contract to the owner address
+     * @param token Token contract address
      * @param _amount Amount of of tokens to withdraw (in wei)
     */
     function withdrawTokens(address token, uint256 _amount) external onlyOwner {
