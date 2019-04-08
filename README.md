@@ -3,23 +3,18 @@ README
 
 Prerequisites
 -------------
-
-Install truffle
-```
-npm install -g truffle
-```
+Make sure to have a local node (geth), vyper (v0.1.0-beta.4, breaking changes afterwards) and truffle installed
 
 Compiling & Deployment
 ----------------------
-
-```
-truffle compile
-truffle migrate
+```sh
+  yarn compile
+  yarn migrate
+  yarn console
 ```
 
 TO-DO
 -----
-
 - Implement Uniswap for DAI/xCHF based system (swap dai to ETH for customer)
 - Implement Uniswap for tokens
 - Figure out how & where to set min exchange rate settings
