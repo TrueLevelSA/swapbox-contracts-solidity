@@ -7,13 +7,20 @@
     "test": "test"
   },
   "dependencies": {
-    "truffle": "^5.0.3"
+    "truffle": "^5.0.3",
+    "web3": "^1.0.0-beta.52"
   },
   "devDependencies": {
-    "solidity-docgen": "^0.1.0"
+    "babel-polyfill": "^6.26.0",
+    "cross-env": "^5.2.0",
+    "solidity-docgen": "^0.1.0",
+    "yenv": "^2.1.0"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "compile": "cross-env NODE_ENV=development truffle compile",
+    "migrate": "cross-env NODE_ENV=development truffle migrate",
+    "console": "cross-env NODE_ENV=development truffle console"
   },
   "repository": {
     "type": "git",
