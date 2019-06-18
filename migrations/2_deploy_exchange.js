@@ -63,7 +63,7 @@ module.exports = async (deployer) => {
       BASE_TOKEN: BaseToken.address,
       UNISWAP_FACTORY: factory.address,
       UNISWAP_EXCHANGE_TEMPLATE: template.address,
-      UNISWAP_EXCAHNGE: exchange,
+      UNISWAP_EXCHANGE: exchange,
     }
 
     console.debug(`Creating ${LOCAL_CONFIG} with:`)

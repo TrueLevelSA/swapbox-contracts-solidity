@@ -6,7 +6,7 @@ const config = (process.env.NODE_ENV === 'production')
 if (!config) { throw new Error('Missing config file') }
 
 const baseToken = config.BASE_TOKEN
-const baseExchange = config.UNISWAP_EXCAHNGE
+const baseExchange = config.UNISWAP_EXCHANGE
 
 module.exports = function(deployer) {
   deployer.deploy(Atola, baseToken, baseExchange);
