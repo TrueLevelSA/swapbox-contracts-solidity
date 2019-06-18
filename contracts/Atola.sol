@@ -8,12 +8,12 @@ import "./UniswapExchangeInterface.sol";
 contract Atola {
     address payable internal owner;
     IERC20 internal basetoken; // 0xb4272071ecadd69d933adcd19ca99fe80664fc08 for xCHF
-    address internal baseexchange; // 0x8de0d002dc83478f479dc31f76cb0a8aa7ccea17 for xCHF
+    address public baseexchange; // 0x8de0d002dc83478f479dc31f76cb0a8aa7ccea17 for xCHF
     address[] public supportedTokensArr;
     address[] public machineAddressesArr;
 
     mapping(address => uint256) internal machineAddresses; // maps to index of machineAddressesArr
-    mapping(address => uint256) internal supportedTokens; // maps to index of supportedTokensArr
+    mapping(address => uint256) public supportedTokens; // maps to index of supportedTokensArr
     mapping(address => uint256) internal buyFee; //(eg 1.2 percent -> 120)
     mapping(address => uint256) internal sellFee; //(eg 1.2 percent -> 120)
 
@@ -53,6 +53,10 @@ contract Atola {
     modifier onlyBtm() {
         require(machineAddresses[msg.sender]>0);
         _;
+    }
+
+    function getTokenCount() public view returns(uint count) {
+        return supportedTokensArr.length;
     }
 
     function removeMachineFromArrayAndMapping(address _machineToDelete) internal {
