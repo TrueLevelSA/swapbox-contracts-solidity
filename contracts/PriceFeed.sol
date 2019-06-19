@@ -1,5 +1,5 @@
 // need to figure out how to return the data (cant return array of struct which would be much more elegant than returning an array where for example the first element is token, second is input balance, third is output balance and then next token etc :/)
-pragma solidity 0.5.0;
+pragma solidity ^0.5.8;
 
 interface ERC20 {
     function balanceOf(address owner) external view returns (uint256);
