@@ -9,15 +9,14 @@ import "./Atola.sol";
 
 contract PriceFeed {
 
-  Atola a;
-
+  Atola atola;
 
   /**
    * @dev The PriceFeed constructor sets the address of the AtolaContract where
    * we look up supportedTokens
   */
   constructor(address payable _atolaContract) public {
-      a = Atola(_atolaContract);
+      atola = Atola(_atolaContract);
   }
 
   function getBalances() external view returns(uint256[] memory balances) {
