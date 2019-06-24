@@ -1,10 +1,13 @@
 const Atola = artifacts.require("Atola");
+const config = (process.env.NODE_ENV === 'production')
+  ? require('../config/ropsten.json')
+  : require('../config/local.json')
 
 contract('Atola', (accounts) => {
   it('should put 10000 Atola in the first account', async () => {
     const atolaInstance = await Atola.deployed();
+    console.log(atolaInstance);
     const balance = await atolaInstance.getBalance.call(accounts[0]);
-
     assert.equal(balance.valueOf(), 10000, "10000 wasn't in the first account");
   });
   it('should call a function that depends on a linked library', async () => {
