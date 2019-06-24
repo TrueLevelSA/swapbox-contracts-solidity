@@ -8,7 +8,8 @@
   },
   "dependencies": {
     "truffle": "^5.0.22",
-    "web3": "^1.0.0-beta.52"
+    "web3": "^1.0.0-beta.52",
+    "web3x-codegen": "^4.0.1"
   },
   "devDependencies": {
     "babel-polyfill": "^6.26.0",
@@ -19,9 +20,10 @@
   },
   "scripts": {
     "test": "truffle test",
-    "compile": "cross-env NODE_ENV=development truffle compile",
+    "compile": "cross-env NODE_ENV=development truffle compile && yarn build:types",
     "migrate": "cross-env NODE_ENV=development truffle migrate",
-    "console": "cross-env NODE_ENV=development truffle console"
+    "console": "cross-env NODE_ENV=development truffle console",
+    "build:types": "web3x-codegen"
   },
   "repository": {
     "type": "git",

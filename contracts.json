@@ -1,0 +1,21 @@
+{
+  "outputPath": "./contracts/types",
+  "contracts": {
+    "Atola": {
+      "source": "truffle",
+      "buildFile": "./build/contracts/Atola.json"
+    },
+    "PriceFeed": {
+      "source": "truffle",
+      "buildFile": "./build/contracts/PriceFeed.json"
+    },
+    "UniswapFactory": {
+      "source": "truffle",
+      "buildFile": "./build/contracts/uniswap_factory.json"
+    },
+    "UniswapExchange": {
+      "source": "truffle",
+      "buildFile": "./build/contracts/uniswap_exchange.json"
+    }
+  }
+}
