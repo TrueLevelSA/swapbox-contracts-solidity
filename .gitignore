@@ -3,3 +3,4 @@ build
 geth
 vyper
 config/local.json
+test/
