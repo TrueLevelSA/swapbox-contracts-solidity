@@ -1,24 +1,26 @@
-const Atola = artifacts.require("Atola");
+const AtolaTruffle = artifacts.require("Atola");
+import { Atola } from './types/Atola';
 const config = (process.env.NODE_ENV === 'production')
   ? require('../config/ropsten.json')
   : require('../config/local.json')
 
 contract('Atola', (accounts) => {
-  it('should put 10000 Atola in the first account', async () => {
-    const atolaInstance = await Atola.deployed();
-    console.log(atolaInstance);
-    const balance = await atolaInstance.getBalance.call(accounts[0]);
-    assert.equal(balance.valueOf(), 10000, "10000 wasn't in the first account");
+  it('verify baseexchange address', async () => {
+    const atola: Atola = (await AtolaTruffle.deployed()).contract;
+    const baseExchangeToken = await atola.methods.baseexchange().call();
+    assert.equal(baseExchangeToken, config.UNISWAP_EXCHANGE, "baseexchange address is not the same in the deployed contract than in the generated config file");
   });
+
   it('should call a function that depends on a linked library', async () => {
-    const atolaInstance = await Atola.deployed();
+    const atolaInstance = await AtolaTruffle.deployed();
     const atolaBalance = (await atolaInstance.getBalance.call(accounts[0])).toNumber();
     const atolaEthBalance = (await atolaInstance.getBalanceInEth.call(accounts[0])).toNumber();
 
     assert.equal(atolaEthBalance, 2 * atolaBalance, 'Library function returned unexpected function, linkage may be broken');
   });
+
   it('should send coin correctly', async () => {
-    const atolaInstance = await Atola.deployed();
+    const atolaInstance = await AtolaTruffle.deployed();
 
     // Setup 2 accounts.
     const accountOne = accounts[0];
