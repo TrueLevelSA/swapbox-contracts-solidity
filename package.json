@@ -23,7 +23,13 @@
     "compile": "cross-env NODE_ENV=development truffle compile && yarn build:types",
     "migrate": "cross-env NODE_ENV=development truffle migrate",
     "console": "cross-env NODE_ENV=development truffle console",
-    "build:types": "web3x-codegen"
+    "build:types": "web3x-codegen",
+    "build:tests": "tsc",
+    "build": "yarn compile && yarn build:types && yarn build:tests",
+    "clean:tests": "rm -rf test/",
+    "clean:truffle": "rm -rf build/",
+    "clean": "yarn clean:tests && yarn clean:truffle",
+    "cleanAndBuild": "yarn clean && yarn build"
   },
   "repository": {
     "type": "git",
