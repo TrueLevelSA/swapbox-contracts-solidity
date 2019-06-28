@@ -9,6 +9,9 @@ const LOCAL_CONFIG = path.join(CONFIG, 'local.json')
 const BaseToken = artifacts.require('ERC20')
 const UniSwapExchangeTemplate = artifacts.require('uniswap_exchange')
 const UniSwapFactory = artifacts.require('uniswap_factory')
+const UniswapExchangeInterface = artifacts.require('UniswapExchangeInterface');
+
+const BN = web3.utils.BN;
 
 module.exports = async (deployer) => {
   const ERC20Config = {
@@ -73,6 +76,27 @@ module.exports = async (deployer) => {
       JSON.stringify(settings, undefined, 2),
       'utf-8'
     )
+  }
+
+  // get exchange at newly deployed address
+  const exchangeInterface = await UniSwapExchangeTemplate.at(exchange);
+
+  // add liquidity to exchange
+  const minLiquidity = new BN(0);   // we don't care since total_liquidity will be 0
+  const maxTokens = new BN(1000);   // 1000 tokens for 1 ETH
+  const deadline = new BN("1569732084");
+  const value = web3.utils.toWei(new BN(1));
+
+  try {
+    const initialLiquidity = await exchangeInterface.addLiquidity(
+      minLiquidity,
+      maxTokens,
+      deadline,
+      { value: value }
+    );
+    console.log('Initial Liquidity :', initialLiquidity);
+  }catch(e){
+    console.dir(e);
   }
 
 };
