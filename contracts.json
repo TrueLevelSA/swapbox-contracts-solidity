@@ -16,6 +16,10 @@
     "UniswapExchange": {
       "source": "truffle",
       "buildFile": "./build/contracts/uniswap_exchange.json"
+    },
+    "UniswapExchangeInterface": {
+      "source": "truffle",
+      "buildFile": "./build/contracts/UniswapExchangeInterface.json"
     }
   }
 }
