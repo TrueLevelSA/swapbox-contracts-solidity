@@ -13,7 +13,7 @@ const UniswapExchangeInterface = artifacts.require('UniswapExchangeInterface');
 
 const BN = web3.utils.BN;
 
-module.exports = async (deployer) => {
+module.exports = async (deployer, network, accounts) => {
   const ERC20Config = {
     name: 'Swiss Token',
     symbol: 'XCHF',
