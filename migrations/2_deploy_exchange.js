@@ -79,7 +79,7 @@ module.exports = async (deployer, network, accounts) => {
   }
 
   // get exchange at newly deployed address
-  const exchangeInterface = await UniSwapExchangeTemplate.at(exchange);
+  const exchangeInterface = await UniswapExchangeInterface.at(exchange);
 
   // add liquidity to exchange
   const minLiquidity = new BN(0);   // we don't care since total_liquidity will be 0
@@ -87,16 +87,15 @@ module.exports = async (deployer, network, accounts) => {
   const deadline = new BN("1569732084");
   const value = web3.utils.toWei(new BN(1));
 
-  try {
-    const initialLiquidity = await exchangeInterface.addLiquidity(
-      minLiquidity,
-      maxTokens,
-      deadline,
-      { value: value }
-    );
-    console.log('Initial Liquidity :', initialLiquidity);
-  }catch(e){
-    console.dir(e);
-  }
+  // const initialLiquidity = await exchangeInterface.addLiquidity(
+  //   minLiquidity.toString(),
+  //   maxTokens.toString(),
+  //   deadline.toString(),
+  //   {
+  //     from: accounts[0],
+  //     value: value,
+  //     gas: 450000
+  //   }
+  // );
 
 };
