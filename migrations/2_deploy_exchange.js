@@ -93,21 +93,28 @@ module.exports = async (deployer, network, accounts) => {
   // get exchange at newly deployed address
   const exchangeInterface = await UniswapExchangeInterface.at(exchange);
 
-  // add liquidity to exchange
-  const minLiquidity = new BN(0);   // we don't care since total_liquidity will be 0
-  const maxTokens = new BN(1000);   // 1000 tokens for 1 ETH
-  const deadline = new BN("1569732084");
-  const value = web3.utils.toWei(new BN(1));
+  // function call parameters
+  const minLiquidity = 0;   // we don't care since total_liquidity will be 0
+  const maxTokens = 1000;   // 1000 tokens for 1 ETH
+  const deadline = Math.ceil(Date.now() / 1000) + ( 60 * 15) //15min. from now
 
-  // const initialLiquidity = await exchangeInterface.addLiquidity(
-  //   minLiquidity.toString(),
-  //   maxTokens.toString(),
-  //   deadline.toString(),
-  //   {
-  //     from: accounts[0],
-  //     value: value,
-  //     gas: 450000
-  //   }
-  // );
+  // tx parameters
+  const from = accounts[0];
+
+  try {
+    const initialLiquidity = await exchangeInterface.addLiquidity(
+      minLiquidity,
+      maxTokens,
+      deadline,
+      {
+        from: from,
+        value: value,
+      }
+    );
+  } catch (e) {
+    console.log(e);
+  }
+
+
 
 };
