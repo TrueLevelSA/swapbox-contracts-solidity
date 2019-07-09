@@ -23,13 +23,13 @@ contract PriceFeed {
     // holds an array of `BalanceTuple` for each supported token. then we fill
     uint256[] memory tokenBalances = new uint256[](atola.getTokenCount());
     uint256[] memory ethBalances = new uint256[](atola.getTokenCount());
+    address baseExchangeAddress = address(atola.baseexchange());
 
     for (uint i = 0; i < atola.getTokenCount(); i++) {
       address exchangeContractAddress = atola.supportedTokensArr(i);
       ERC20 token = ERC20(exchangeContractAddress);
 
-      // token balance of the
-      tokenBalances[i] = token.balanceOf(address(atola.baseexchange()));
+      tokenBalances[i] = token.balanceOf(baseExchangeAddress);
       ethBalances[i] = address(token).balance;
     }
     return (tokenBalances, ethBalances);
