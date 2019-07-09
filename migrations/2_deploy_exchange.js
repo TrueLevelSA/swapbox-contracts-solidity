@@ -78,6 +78,18 @@ module.exports = async (deployer, network, accounts) => {
     )
   }
 
+
+  // ADD LIQUIDITY TO EXCHANGE
+  // =========================
+  const value = web3.utils.toWei(new BN(1));
+  const token = await BaseToken.deployed();
+
+  // deposit 1 ETH in baseToken
+  await token.deposit({ from: accounts[0], value: value });
+
+  // approve uniswap exchange for 1 ETH
+  await token.approve(exchange, value, { from: accounts[0] });
+
   // get exchange at newly deployed address
   const exchangeInterface = await UniswapExchangeInterface.at(exchange);
 
