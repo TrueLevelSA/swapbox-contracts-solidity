@@ -58,7 +58,6 @@ module.exports = async (deployer, network, accounts) => {
     const createTx = await factory.createExchange(BaseToken.address, { gas: 4712388 })
     // Retrieve the created Exchange address from the logs
     exchange = createTx.receipt.logs[0].args.exchange
-    console.debug('Created the Exchange', exchange)
 
   } catch (e) {
     console.log('Failed to deploy Exchange', e)
