@@ -20,6 +20,10 @@
     "UniswapExchangeInterface": {
       "source": "truffle",
       "buildFile": "./build/contracts/UniswapExchangeInterface.json"
+    },
+    "ERC20": {
+      "source": "truffle",
+      "buildFile": "./build/contracts/ERC20.json"
     }
   }
 }
