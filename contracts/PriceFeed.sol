@@ -19,20 +19,23 @@ contract PriceFeed {
       atola = Atola(_atolaContract);
   }
 
-  function getBalances() external view returns(uint256[] memory, uint256[] memory) {
+  function getBalances() external view returns(address[] memory, uint256[] memory, uint256[] memory) {
     // holds an array of `BalanceTuple` for each supported token. then we fill
-    uint256[] memory tokenBalances = new uint256[](atola.getTokenCount());
-    uint256[] memory ethBalances = new uint256[](atola.getTokenCount());
+    uint256 tokenCount = atola.getTokenCount();
+    address[] memory tokenAddresses = new address[](tokenCount);
+    uint256[] memory tokenBalances = new uint256[](tokenCount);
+    uint256[] memory ethBalances = new uint256[](tokenCount);
     address baseExchangeAddress = address(atola.baseexchange());
 
-    for (uint i = 0; i < atola.getTokenCount(); i++) {
+    for (uint i = 0; i < tokenCount; i++) {
       address exchangeContractAddress = atola.supportedTokensArr(i);
       ERC20 token = ERC20(exchangeContractAddress);
 
       tokenBalances[i] = token.balanceOf(baseExchangeAddress);
       ethBalances[i] = address(token).balance;
+      tokenAddresses[i] = exchangeContractAddress;
     }
-    return (tokenBalances, ethBalances);
+    return (tokenAddresses, tokenBalances, ethBalances);
   }
 }
 
