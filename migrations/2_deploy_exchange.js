@@ -13,45 +13,56 @@ const UniswapExchangeInterface = artifacts.require('UniswapExchangeInterface');
 
 const BN = web3.utils.BN;
 
+const createToken = async (config, account) => {
+  return await BaseToken.new(
+    utils.stringToBytes32(config.name),
+    utils.stringToBytes32(config.symbol),
+    utils.numberToUint(config.decimals),
+    utils.numberToUint(config.supply),
+    {
+      from: account
+    }
+  );
+}
+
+const createExchange = async (factory, token) => {
+  let exchangeAddress;
+
+  try {
+    const createTx = await factory.createExchange(token.address, { gas: 4712388 })
+    // Retrieve the created Exchange address from the logs
+    exchangeAddress = createTx.receipt.logs[0].args.exchange
+  } catch (e) {
+    console.error('Failed to deploy Exchange', e)
+  }
+
+  return await UniswapExchangeInterface.at(exchangeAddress);
+}
+
 module.exports = async (deployer, network, accounts) => {
   if(process.env.NODE_ENV === 'production'){
     console.error('you don\'t want to deploy exchange while in production');
     return;
   }
 
-  const ERC20Config = {
-    name: 'Swiss Token',
-    symbol: 'XCHF',
-    decimals: 18,
-    supply: 10000000000000000000,
-  }
-
-  const secondTokenConfig = {
-    name: 'Second Token',
-    symbol: 'SCND',
-    decimals: 18,
-    supply: 10000000000000000000,
-  }
-
-  // Create the ERC20 token
-  const baseToken = await BaseToken.new(
-    utils.stringToBytes32(ERC20Config.name),
-    utils.stringToBytes32(ERC20Config.symbol),
-    utils.numberToUint(ERC20Config.decimals),
-    utils.numberToUint(ERC20Config.supply),
+  const tokenConfigs = [
     {
-      from: accounts[0]
-    }
-  )
-
-  const secondToken = await BaseToken.new(
-    utils.stringToBytes32(secondTokenConfig.name),
-    utils.stringToBytes32(secondTokenConfig.symbol),
-    utils.numberToUint(secondTokenConfig.decimals),
-    utils.numberToUint(secondTokenConfig.supply),
+      name: 'Swiss Token',
+      symbol: 'XCHF',
+      decimals: 18,
+      supply: 10000000000000000000,
+    },
     {
-      from: accounts[0]
+      name: 'Second Token',
+      symbol: 'SCND',
+      decimals: 18,
+      supply: 10000000000000000000,
     }
+  ]
+
+  // deploy tokens
+  const tokens = await Promise.all(
+    tokenConfigs.map(async config => await createToken(config, accounts[0]))
   )
 
   // Use the Factory to create the exchange
@@ -72,48 +83,44 @@ module.exports = async (deployer, network, accounts) => {
     process.exit(1)
   }
 
-  // Now we can use the factory to generate a BaseToken Exchange
-  let exchange;
-  try {
-    const createTx = await factory.createExchange(BaseToken.address, { gas: 4712388 })
-    // Retrieve the created Exchange address from the logs
-    exchange = createTx.receipt.logs[0].args.exchange
+  const exchanges = await Promise.all(
+    tokens.map(async token => await createExchange(factory, token))
+  );
 
-  } catch (e) {
-    console.log('Failed to deploy Exchange', e)
-  } finally {
-    if (!exchange) { return }
-
-    // Since the exchange address is not saved by truffle we generate a seperate
-    // config file.
-    const settings = {
-      BASE_TOKEN: baseToken.address,
-      SECOND_TOKEN: secondToken.address,
-      UNISWAP_FACTORY: factory.address,
-      UNISWAP_EXCHANGE_TEMPLATE: template.address,
-      UNISWAP_EXCHANGE: exchange,
-    }
-    fs.writeFileSync(
-      LOCAL_CONFIG,
-      JSON.stringify(settings, undefined, 2),
-      'utf-8'
-    )
+  // return if one of the exchanges is not set
+  if(exchange.length !== tokens.length || !exchanges.every(exchange => exchange !== 'undefined')){
+    console.error('exchanges were not created correctly')
+    return
   }
+
+  // Since the exchange address is not saved by truffle we generate a seperate
+  // config file.
+  const settings = {
+    BASE_TOKEN: tokens[0].address,
+    SECOND_TOKEN: tokens[1].address,
+    UNISWAP_FACTORY: factory.address,
+    UNISWAP_EXCHANGE_TEMPLATE: template.address,
+    UNISWAP_EXCHANGE: exchanges[0].address,
+    UNISWAP_EXCHANGE_SCND: exchange[1].address,
+  }
+  fs.writeFileSync(
+    LOCAL_CONFIG,
+    JSON.stringify(settings, undefined, 2),
+    'utf-8'
+  )
+
 
 
   // ADD LIQUIDITY TO EXCHANGE
   // =========================
   const value = web3.utils.toWei(new BN(1));
-  const token = await BaseToken.deployed();
 
-  // deposit 1 ETH in baseToken
-  await token.deposit({ from: accounts[0], value: value });
-
-  // approve uniswap exchange for 1 ETH
-  await token.approve(exchange, value, { from: accounts[0] });
-
-  // get exchange at newly deployed address
-  const exchangeInterface = await UniswapExchangeInterface.at(exchange);
+  Promise.all(
+    tokens.map(async token => {
+      await token.deposit({ from: accounts[0], value: value });
+      await token.approve(exchange, value, { from: accounts[0] });
+    })
+  )
 
   // function call parameters
   const minLiquidity = 0;   // we don't care since total_liquidity will be 0
@@ -123,6 +130,7 @@ module.exports = async (deployer, network, accounts) => {
   // tx parameters
   const from = accounts[0];
 
+  exchanges.map(exchange)
   try {
     const initialLiquidity = await exchangeInterface.addLiquidity(
       minLiquidity,
