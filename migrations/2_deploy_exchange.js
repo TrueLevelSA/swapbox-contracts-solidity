@@ -72,6 +72,11 @@ module.exports = async (deployer, network, accounts) => {
       UNISWAP_EXCHANGE_TEMPLATE: template.address,
       UNISWAP_EXCHANGE: exchange,
     }
+    fs.writeFileSync(
+      LOCAL_CONFIG,
+      JSON.stringify(settings, undefined, 2),
+      'utf-8'
+    )
   }
 
 
