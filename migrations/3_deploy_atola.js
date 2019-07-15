@@ -7,10 +7,14 @@ const config = (process.env.NODE_ENV === 'production')
 if (!config) { throw new Error('Missing config file') }
 
 const baseToken = config.BASE_TOKEN
+const secondToken = config.SECOND_TOKEN
 const baseExchange = config.UNISWAP_EXCHANGE
 
-module.exports = function(deployer) {
-  deployer.deploy(Atola, baseToken, baseExchange).then(() => {
-    return deployer.deploy(Pricefeed, Atola.address);
-  })
+module.exports = async (deployer) => {
+  await deployer.deploy(Atola, baseToken, baseExchange);
+  const atola = await Atola.deployed();
+  const priceFeed = await deployer.deploy(PriceFeed, atola.address);
+
+  atola.addToken(baseToken);
+  atola.addToken(secondToken);
 };

@@ -25,13 +25,33 @@ module.exports = async (deployer, network, accounts) => {
     decimals: 18,
     supply: 10000000000000000000,
   }
+
+  const secondTokenConfig = {
+    name: 'Second Token',
+    symbol: 'SCND',
+    decimals: 18,
+    supply: 10000000000000000000,
+  }
+
   // Create the ERC20 token
-  const baseToken = await deployer.deploy(
-    BaseToken,
+  const baseToken = await BaseToken.new(
     utils.stringToBytes32(ERC20Config.name),
     utils.stringToBytes32(ERC20Config.symbol),
     utils.numberToUint(ERC20Config.decimals),
-    utils.numberToUint(ERC20Config.supply)
+    utils.numberToUint(ERC20Config.supply),
+    {
+      from: accounts[0]
+    }
+  )
+
+  const secondToken = await BaseToken.new(
+    utils.stringToBytes32(secondTokenConfig.name),
+    utils.stringToBytes32(secondTokenConfig.symbol),
+    utils.numberToUint(secondTokenConfig.decimals),
+    utils.numberToUint(secondTokenConfig.supply),
+    {
+      from: accounts[0]
+    }
   )
 
   // Use the Factory to create the exchange
@@ -67,7 +87,8 @@ module.exports = async (deployer, network, accounts) => {
     // Since the exchange address is not saved by truffle we generate a seperate
     // config file.
     const settings = {
-      BASE_TOKEN: BaseToken.address,
+      BASE_TOKEN: baseToken.address,
+      SECOND_TOKEN: secondToken.address,
       UNISWAP_FACTORY: factory.address,
       UNISWAP_EXCHANGE_TEMPLATE: template.address,
       UNISWAP_EXCHANGE: exchange,
