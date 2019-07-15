@@ -27,4 +27,11 @@ contract('Atola', (accounts) => {
     const baseExchangeToken = await atola.methods.baseexchange().call();
     assert.equal(baseExchangeToken, config.UNISWAP_EXCHANGE, "baseexchange address is not the same in the deployed contract than in the generated config file");
   });
+
+  it('get correct token count', async () => {
+    const tokenCount = await atola.methods.getTokenCount().call();
+    assert.equal(tokenCount, "2", "baseexchange address is not the same in the deployed contract than in the generated config file");
+  });
+
+
 });
