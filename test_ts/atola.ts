@@ -30,7 +30,7 @@ contract('Atola', (accounts) => {
 
   it('get correct token count', async () => {
     const tokenCount = await atola.methods.getTokenCount().call();
-    assert.equal(tokenCount, "2", "baseexchange address is not the same in the deployed contract than in the generated config file");
+    assert.equal(tokenCount, "2", "token count should be 2");
   });
 
 
