@@ -6,7 +6,7 @@ const config = (process.env.NODE_ENV === 'production')
   : require('../config/local.json')
 
 contract('Atola', (accounts) => {
-  let eth;
+  let eth: Eth;
   let atola: Atola;
 
   before(async () => {
