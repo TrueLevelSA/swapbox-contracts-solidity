@@ -13,8 +13,14 @@ const UniswapExchangeInterface = artifacts.require('UniswapExchangeInterface');
 
 const BN = web3.utils.BN;
 
-const createToken = async (config, account) => {
-  return await BaseToken.new(
+/**
+ * Deploy a standard ERC20 Token and return the truffle instance of the contract.
+ *
+ * @param config {name, symbol, decimals, supply}
+ * @param account The web3 account from which we deploy the Token
+ */
+const createToken = (config, account) => {
+  return BaseToken.new(
     utils.stringToBytes32(config.name),
     utils.stringToBytes32(config.symbol),
     utils.numberToUint(config.decimals),
@@ -25,6 +31,12 @@ const createToken = async (config, account) => {
   );
 }
 
+/**
+ * Deploy a Uniswap Exchange for the given token.
+ *
+ * @param factory The Uniswap Factory truffle contract
+ * @param token The Token for which we create the exchange
+ */
 const createExchange = async (factory, token) => {
   let exchangeAddress;
 
@@ -36,7 +48,7 @@ const createExchange = async (factory, token) => {
     console.error('Failed to deploy Exchange', e)
   }
 
-  return await UniswapExchangeInterface.at(exchangeAddress);
+  return UniswapExchangeInterface.at(exchangeAddress);
 }
 
 module.exports = async (deployer, network, accounts) => {
