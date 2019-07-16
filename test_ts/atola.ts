@@ -33,5 +33,13 @@ contract('Atola', (accounts) => {
     assert.equal(tokenCount, "2", "token count should be 2");
   });
 
+  it('get correct tokens addresses', async () => {
+    const tokenAddressXCHF = await atola.methods.supportedTokensArr(0).call();
+    const tokenAddressSCND = await atola.methods.supportedTokensArr(1).call();
+
+    assert.equal(tokenAddressXCHF.toString(), config.BASE_TOKEN, 'XCHF token address is wrong');
+    assert.equal(tokenAddressSCND.toString(), config.SECOND_TOKEN, 'SCND token address is wrong');
+  });
+
 
 });
