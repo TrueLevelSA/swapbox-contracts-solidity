@@ -78,7 +78,8 @@ module.exports = async (deployer, network, accounts) => {
   )
 
   // Use the Factory to create the exchange
-  const template = await deployer.deploy(UniSwapExchangeTemplate)
+  // const template = await deployer.deploy(UniSwapExchangeTemplate);
+  const template = await UniSwapExchangeTemplate.new();
 
   // Create the UniSwap Factory
   const factory = await deployer.deploy(UniSwapFactory)
