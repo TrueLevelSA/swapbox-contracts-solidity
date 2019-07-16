@@ -70,12 +70,7 @@ module.exports = async (deployer, network, accounts) => {
       decimals: 18,
       supply: 10000000000000000000,
     }
-  ]
-
-  // deploy tokens
-  const tokens = await Promise.all(
-    tokenConfigs.map(async config => await createToken(config, accounts[0]))
-  )
+  ];
 
   // Use the Factory to create the exchange
   // const template = await deployer.deploy(UniSwapExchangeTemplate);
@@ -96,25 +91,28 @@ module.exports = async (deployer, network, accounts) => {
     process.exit(1)
   }
 
-  const exchanges = await Promise.all(
-    tokens.map(async token => await createExchange(factory, token))
-  );
-
-  // return if one of the exchanges is not set
-  if(exchange.length !== tokens.length || !exchanges.every(exchange => exchange !== 'undefined')){
-    console.error('exchanges were not created correctly')
-    return
-  }
+  // deploy tokens
+  const tokens = await Promise.all(
+    tokenConfigs.map(
+      async config => {
+        const token = await createToken(config, accounts[0])
+        return {
+            token: token,
+            exchange: await createExchange(factory, token)
+        }
+      }
+    )
+  )
 
   // Since the exchange address is not saved by truffle we generate a seperate
   // config file.
   const settings = {
-    BASE_TOKEN: tokens[0].address,
-    SECOND_TOKEN: tokens[1].address,
+    BASE_TOKEN: tokens[0].token.address,
+    SECOND_TOKEN: tokens[1].token.address,
     UNISWAP_FACTORY: factory.address,
     UNISWAP_EXCHANGE_TEMPLATE: template.address,
-    UNISWAP_EXCHANGE: exchanges[0].address,
-    UNISWAP_EXCHANGE_SCND: exchange[1].address,
+    UNISWAP_EXCHANGE: tokens[0].exchange.address,
+    UNISWAP_EXCHANGE_SCND: tokens[1].exchange.address,
   }
   fs.writeFileSync(
     LOCAL_CONFIG,
@@ -128,10 +126,10 @@ module.exports = async (deployer, network, accounts) => {
   // =========================
   const value = web3.utils.toWei(new BN(1));
 
-  Promise.all(
+  await Promise.all(
     tokens.map(async token => {
-      await token.deposit({ from: accounts[0], value: value });
-      await token.approve(exchange, value, { from: accounts[0] });
+      await token.token.deposit({ from: accounts[0], value: value });
+      await token.token.approve(token.exchange.address, value, { from: accounts[0] });
     })
   )
 
@@ -142,10 +140,8 @@ module.exports = async (deployer, network, accounts) => {
 
   // tx parameters
   const from = accounts[0];
-
-  exchanges.map(exchange)
-  try {
-    const initialLiquidity = await exchangeInterface.addLiquidity(
+  await Promise.all(
+    tokens.map(token => token.exchange.addLiquidity(
       minLiquidity,
       maxTokens,
       deadline,
@@ -153,11 +149,7 @@ module.exports = async (deployer, network, accounts) => {
         from: from,
         value: value,
       }
-    );
-  } catch (e) {
-    console.log(e);
-  }
-
-
+    ))
+  )
 
 };
