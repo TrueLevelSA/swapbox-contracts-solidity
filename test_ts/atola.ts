@@ -34,11 +34,11 @@ contract('Atola', (accounts) => {
   });
 
   it('get correct tokens addresses', async () => {
-    const tokenAddressXCHF = await atola.methods.supportedTokensArr(0).call();
-    const tokenAddressSCND = await atola.methods.supportedTokensArr(1).call();
+    const exchangeAddressXCHF = await atola.methods.supportedTokensArr(0).call();
+    const exchangeAddressSCND = await atola.methods.supportedTokensArr(1).call();
 
-    assert.equal(tokenAddressXCHF.toString(), config.BASE_TOKEN, 'XCHF token address is wrong');
-    assert.equal(tokenAddressSCND.toString(), config.SECOND_TOKEN, 'SCND token address is wrong');
+    assert.equal(exchangeAddressXCHF.toString(), config.UNISWAP_EXCHANGE, 'XCHF exchange address is wrong');
+    assert.equal(exchangeAddressSCND.toString(), config.UNISWAP_EXCHANGE_SCND, 'SCND exchange address is wrong');
   });
 
 
