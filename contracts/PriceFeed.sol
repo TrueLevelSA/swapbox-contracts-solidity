@@ -5,6 +5,10 @@ interface ERC20 {
     function balanceOf(address owner) external view returns (uint256);
 }
 
+interface Exchange {
+  function tokenAddress() external view returns (address);
+}
+
 import "./Atola.sol";
 
 contract PriceFeed {
@@ -20,22 +24,20 @@ contract PriceFeed {
   }
 
   function getBalances() external view returns(address[] memory, uint256[] memory, uint256[] memory) {
-    // holds an array of `BalanceTuple` for each supported token. then we fill
     uint256 tokenCount = atola.getTokenCount();
-    address[] memory tokenAddresses = new address[](tokenCount);
+    address[] memory exchangeAddresses = new address[](tokenCount);
     uint256[] memory tokenBalances = new uint256[](tokenCount);
     uint256[] memory ethBalances = new uint256[](tokenCount);
-    address baseExchangeAddress = address(atola.baseexchange());
 
     for (uint i = 0; i < tokenCount; i++) {
-      address exchangeContractAddress = atola.supportedTokensArr(i);
-      ERC20 token = ERC20(exchangeContractAddress);
+      Exchange exchange = Exchange(atola.supportedTokensArr(i));
+      ERC20 token = ERC20(exchange.tokenAddress());
 
-      tokenBalances[i] = token.balanceOf(baseExchangeAddress);
+      tokenBalances[i] = token.balanceOf(address(exchange));
       ethBalances[i] = address(token).balance;
-      tokenAddresses[i] = exchangeContractAddress;
+      exchangeAddresses[i] = address(exchange);
     }
-    return (tokenAddresses, tokenBalances, ethBalances);
+    return (exchangeAddresses, tokenBalances, ethBalances);
   }
 }
 
