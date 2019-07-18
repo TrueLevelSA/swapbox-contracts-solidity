@@ -34,7 +34,7 @@ contract PriceFeed {
       ERC20 token = ERC20(exchange.tokenAddress());
 
       tokenBalances[i] = token.balanceOf(address(exchange));
-      ethBalances[i] = address(token).balance;
+      ethBalances[i] = address(exchange).balance;
       exchangeAddresses[i] = address(exchange);
     }
     return (exchangeAddresses, tokenBalances, ethBalances);
