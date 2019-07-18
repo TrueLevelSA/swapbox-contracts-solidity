@@ -135,7 +135,7 @@ module.exports = async (deployer, network, accounts) => {
 
   // function call parameters
   const minLiquidity = 0;   // we don't care since total_liquidity will be 0
-  const maxTokens = 1000;   // 1000 tokens for 1 ETH
+  const maxTokens = value;   // 1000 tokens
   const deadline = Math.ceil(Date.now() / 1000) + ( 60 * 15) //15min. from now
 
   // tx parameters
