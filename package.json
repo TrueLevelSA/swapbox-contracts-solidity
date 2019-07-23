@@ -31,7 +31,7 @@
     "clean:truffle": "rm -rf build/",
     "clean": "yarn clean:tests && yarn clean:truffle",
     "cleanAndBuild": "yarn clean && yarn build",
-    "postinstall": "git submodule init && git submodule update"
+    "postinstall": "git submodule update --init"
   },
   "repository": {
     "type": "git",
