@@ -124,14 +124,18 @@ module.exports = async (deployer, network, accounts) => {
 
   // ADD LIQUIDITY TO EXCHANGE
   // =========================
-  const value = web3.utils.toWei(new BN(1));
+  const value = web3.utils.toWei(new BN(15));
 
   await Promise.all(
     tokens.map(async token => {
       await token.token.deposit({ from: accounts[0], value: value });
-      await token.token.approve(token.exchange.address, value, { from: accounts[0] });
+      await token.token.approve(
+        token.exchange.address,
+        value,
+        { from: accounts[0] }
+      );
     })
-  )
+  );
 
   // function call parameters
   const minLiquidity = 0;   // we don't care since total_liquidity will be 0
