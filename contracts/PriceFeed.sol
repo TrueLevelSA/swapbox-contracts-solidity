@@ -7,6 +7,8 @@ interface ERC20 {
 
 interface Exchange {
   function tokenAddress() external view returns (address);
+  function getTokenToEthInputPrice(uint256 tokens_sold) external view returns (uint256);
+  function getEthToTokenOutputPrice(uint256 tokens_bought) external view returns (uint256);
 }
 
 import "./Atola.sol";
@@ -38,6 +40,11 @@ contract PriceFeed {
       exchangeAddresses[i] = address(exchange);
     }
     return (exchangeAddresses, tokenBalances, ethBalances);
+  }
+
+  function getPrice(uint256 tokensSold, uint256 tokensBought) external view returns(uint256, uint256) {
+    Exchange exchange = Exchange(atola.baseexchange());
+    return (exchange.getTokenToEthInputPrice(tokensSold), exchange.getEthToTokenOutputPrice(tokensBought));
   }
 }
 
