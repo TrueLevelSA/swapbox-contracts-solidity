@@ -29,6 +29,6 @@ module.exports = async (deployer) => {
   )
 
   // assuming for now that supportedTokens holds exchange addresses
-  atola.addToken(baseExchange);
-  atola.addToken(secondExchange);
+  await atola.addToken(baseExchange);
+  await atola.addToken(secondExchange);
 };
