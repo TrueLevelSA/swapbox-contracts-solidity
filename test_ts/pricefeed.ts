@@ -33,7 +33,7 @@ contract('PriceFeed', (accounts) => {
     const ethBalances = balances[2].map(ethBalance => fromWei(ethBalance, "ether"));
 
     // TODO: use a config file for default setup of liquidity
-    assert.equal(tokenBalances[0], '15', 'tokenBalance is wrong in baseToken');
+    assert.equal(tokenBalances[0], '3000', 'tokenBalance is wrong in baseToken');
     assert.equal(tokenBalances[1], '15', 'tokenBalance is wrong in scndToken');
 
     assert.equal(ethBalances[0], '15', 'ethBalances is wrong for baseToken');
