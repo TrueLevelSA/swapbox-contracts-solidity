@@ -160,13 +160,20 @@ contract Atola {
     function fiatToEth(uint256 _amountFiat, uint256 _tolerance, address _userAddress) external onlyBtm returns (bool) {
         require(buyFee[msg.sender] < 10000); // i'm not sure this is a good enough check, if it is we only need to do it once when setting fee
         uint256 fee = (_amountFiat * buyFee[msg.sender]) / 10000;
+        uint256 amountLessFee = _amountFiat - fee;
+        uint256 deadline = block.timestamp + 120;
 
-        //call approve
-        basetoken.approve(baseexchange, _amountFiat - fee);
+        // approve exchange for Atola
+        basetoken.approve(baseexchange, amountLessFee);
 
         //call uniswap
         UniswapExchangeInterface ex = UniswapExchangeInterface(baseexchange);
-        uint256 ethBought = ex.tokenToEthTransferInput(_amountFiat - fee, _tolerance, block.timestamp, _userAddress);
+        uint256 ethBought = ex.tokenToEthTransferInput(
+          amountLessFee,
+          _tolerance,
+          deadline,
+          _userAddress
+        );
 
         emit CryptoPurchase(_userAddress, _amountFiat, ethBought);
     }
