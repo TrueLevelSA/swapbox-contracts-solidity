@@ -101,21 +101,21 @@ module.exports = async (deployer, network, accounts) => {
   // =========================
   const value = web3.utils.toWei(new BN(500));
   const xchfValue = value.muln(200);
-  const from = accounts[0];
+  const liquidityProvider = accounts[1];
 
   // deposit and approve `value` in both tokens
-  await tokenXchf.deposit({ from: from, value: value });
-  await tokenXchf.approve(exchangeXchf.address, xchfValue, { from: from });
+  await tokenXchf.deposit({ from: liquidityProvider, value: value });
+  await tokenXchf.approve(exchangeXchf.address, xchfValue, { from: liquidityProvider });
 
-  await tokenScnd.deposit({ from: from, value: value });
-  await tokenScnd.approve(exchangeScnd.address, value, { from: from });
+  await tokenScnd.deposit({ from: liquidityProvider, value: value });
+  await tokenScnd.approve(exchangeScnd.address, value, { from: liquidityProvider });
 
   // function call parameters
-  const minLiquidity = 0;   // we don't care since total_liquidity will be 0
+  const minLiquidity = 0;   // we don't care since `total_liquidity` will be 0
   const maxTokens = value;   // 1000 tokens
   const deadline = Math.ceil(Date.now() / 1000) + ( 60 * 15) //15min. from now
 
   // Add `value` liquidity to exchanges
-  await exchangeXchf.addLiquidity(minLiquidity, xchfValue, deadline, { from: from, value: value, });
-  await exchangeScnd.addLiquidity(minLiquidity, maxTokens, deadline, { from: from, value: value, });
+  await exchangeXchf.addLiquidity(minLiquidity, xchfValue, deadline, { from: liquidityProvider, value: value, });
+  await exchangeScnd.addLiquidity(minLiquidity, maxTokens, deadline, { from: liquidityProvider, value: value, });
 };
