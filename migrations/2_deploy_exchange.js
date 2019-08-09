@@ -49,8 +49,8 @@ const createExchange = async (factory, token) => {
 }
 
 module.exports = async (deployer, network, accounts) => {
-  if(process.env.NODE_ENV === 'production'){
-    console.error('you don\'t want to deploy exchange while in production');
+  if (network === 'production') {
+    console.error('Not deploying anything uniswap-related while in production');
     return;
   }
 
