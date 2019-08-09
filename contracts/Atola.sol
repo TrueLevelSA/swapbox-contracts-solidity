@@ -51,7 +51,7 @@ contract Atola {
      * @dev Throws if called by any account other than thoses in the machineAddresses list
     */
     modifier onlyBtm() {
-        require(machineAddresses[msg.sender]>0);
+        require(machineAddresses[msg.sender] > 0);
         _;
     }
 
@@ -112,7 +112,7 @@ contract Atola {
     */
     function addMachine(address _machineAddress) external onlyOwner {
         uint256 len = machineAddressesArr.push(_machineAddress);
-        machineAddresses[_machineAddress] = len - 1;
+        machineAddresses[_machineAddress] = len;
     }
 
     /**
