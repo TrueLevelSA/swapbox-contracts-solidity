@@ -99,7 +99,7 @@ module.exports = async (deployer, network, accounts) => {
 
   // ADD LIQUIDITY TO EXCHANGE
   // =========================
-  const value = web3.utils.toWei(new BN(15));
+  const value = web3.utils.toWei(new BN(500));
   const xchfValue = value.muln(200);
   const from = accounts[0];
 
