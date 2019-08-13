@@ -23,7 +23,7 @@ contract Atola {
     event CryptoPurchase(address customerAddress, uint256 fiatAmount, uint256 cryptoAmount);
     event CryptoSale(address customerAddress, uint256 cryptoAmount, uint256 fiatAmount);
     event Refund(address customerAddress, uint256 cryptoAmount);
-    event EthRecieved(address customerAddress, uint256 cryptoAmount);
+    event EthReceived(address customerAddress, uint256 cryptoAmount);
 
     /// uint256 dailyOutLimit = 5.1234567891012131 ether; /* Ether */
 
@@ -284,6 +284,6 @@ contract Atola {
     */
     function() external payable {
         customerBalance[msg.sender] += msg.value;
-        emit EthRecieved(msg.sender, msg.value);
+        emit EthReceived(msg.sender, msg.value);
     }
 }
