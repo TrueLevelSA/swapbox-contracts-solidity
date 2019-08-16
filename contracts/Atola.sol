@@ -59,30 +59,6 @@ contract Atola {
         return supportedTokensArr.length;
     }
 
-    function removeMachineFromArrayAndMapping(address _machineToDelete) internal {
-      require(machineAddresses[_machineToDelete] > 0);
-      uint index = machineAddresses[_machineToDelete];
-
-      if (machineAddressesArr.length > 1) {
-        machineAddressesArr[index] = machineAddressesArr[machineAddressesArr.length-1];
-        machineAddresses[machineAddressesArr[index]] = index; // as we moved last element to index, we should update the mapping to reflect this
-      }
-      delete machineAddresses[_machineToDelete];
-      machineAddressesArr.length--; // Implicitly recovers gas from last element storage
-    }
-
-    function removeTokenFromArrayAndMapping(address _tokenToDelete) internal {
-      require(supportedTokens[_tokenToDelete] > 0);
-      uint index = supportedTokens[_tokenToDelete];
-
-      if (supportedTokensArr.length > 1) {
-        supportedTokensArr[index] = supportedTokensArr[supportedTokensArr.length-1];
-        supportedTokens[supportedTokensArr[index]] = index; // as we moved last element to index, we should update the mapping to reflect this
-      }
-      delete supportedTokens[_tokenToDelete];
-      supportedTokensArr.length--; // Implicitly recovers gas from last element storage
-    }
-
     // ideally should do the following to avoid having the two functions above, included for testing
     function removeItemFromArrayAndMapping(address[] storage array, mapping (address => uint256) storage itemMapping, address _itemToDelete) internal {
       require(itemMapping[_itemToDelete] > 0);
@@ -120,7 +96,6 @@ contract Atola {
      * @param _machineAddress The address of the BTM
     */
     function removeMachine(address _machineAddress) external onlyOwner {
-        //removeMachineFromArrayAndMapping(_machineAddress);
         removeItemFromArrayAndMapping(machineAddressesArr, machineAddresses, _machineAddress);
     }
 
