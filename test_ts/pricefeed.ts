@@ -1,0 +1,55 @@
+import { ERC20 } from './types/ERC20';
+import { PriceFeed } from './types/PriceFeed';
+import { UniswapExchange } from './types/UniswapExchange';
+import { Eth } from 'web3x/eth';
+import {  toWei } from 'web3x/utils';
+import BN from 'bn.js';
+
+const config = (process.env.NODE_ENV === 'production')
+  ? require('../config/ropsten.json')
+  : require('../config/local.json')
+
+contract('PriceFeed', () => {
+  let eth: Eth;
+  let priceFeed: PriceFeed;
+  let baseToken: ERC20;
+  let exchange: UniswapExchange;
+
+  before(async () => {
+    // retrieve current provider
+    const currentEth = Eth.fromCurrentProvider();
+    if (currentEth) {
+      eth = currentEth;
+    } else {
+      throw Error('No web3 provider found');
+    }
+
+    // retrieve deployed contracts
+    priceFeed = new PriceFeed(eth, config.PRICEFEED);
+    baseToken = new ERC20(eth, config.BASE_TOKEN);
+    exchange = new UniswapExchange(eth, config.UNISWAP_EXCHANGE);
+  });
+
+  it('check getReserves returns right balances', async () => {
+    const reserves = await priceFeed.methods.getReserves().call();
+    const pfTokenReserve = new BN(reserves[0]);
+    const pfEthReserve = new BN(reserves[1]);
+
+    if (!exchange.address){
+      console.error("Exchange address not set");
+      return;
+    }
+    const tokenReserve = await baseToken.methods.balanceOf(exchange.address).call();
+    const ethReserve = await eth.getBalance(exchange.address);
+    assert.isTrue(pfTokenReserve.eq(new BN(tokenReserve)), "token reserve is wrong");
+    assert.isTrue(pfEthReserve.eq(new BN(ethReserve)), "eth reserve is wrong");
+  });
+
+  it('check buyPrice is smaller than sellPrice', async () => {
+    const tokensAmount = toWei('1', 'ether');
+    const prices = await priceFeed.methods.getPrice(tokensAmount, tokensAmount).call();
+    const buyPrice = new BN(prices[0]);
+    const sellPrice = new BN(prices[1]);
+    assert.isTrue(buyPrice.lt(sellPrice));
+  })
+});

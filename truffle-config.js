@@ -13,14 +13,16 @@ module.exports = {
   networks: {
     development: {
       host: "localhost",
-      port: 7545,
+      port: 8546,
       network_id: "*",
       gas: 4525090,
+      websockets: true,
     },
-    test: {
+    production: {
       host: "127.0.0.1",
       port: 8545,
-      network_id: "*"
+      network_id: "*",
+      gas: 4525090,
     }
   }
 

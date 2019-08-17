@@ -1,5 +1,4 @@
-// FIXME Fix the Solidity version
-pragma solidity ^0.5.0;
+pragma solidity 0.5.8;
 
 import "./IERC20.sol";
 import "./UniswapExchangeInterface.sol";
@@ -8,12 +7,12 @@ import "./UniswapExchangeInterface.sol";
 contract Atola {
     address payable internal owner;
     IERC20 internal basetoken; // 0xb4272071ecadd69d933adcd19ca99fe80664fc08 for xCHF
-    address internal baseexchange; // 0x8de0d002dc83478f479dc31f76cb0a8aa7ccea17 for xCHF
+    address public baseexchange; // 0x8de0d002dc83478f479dc31f76cb0a8aa7ccea17 for xCHF
     address[] public supportedTokensArr;
     address[] public machineAddressesArr;
 
     mapping(address => uint256) internal machineAddresses; // maps to index of machineAddressesArr
-    mapping(address => uint256) internal supportedTokens; // maps to index of supportedTokensArr
+    mapping(address => uint256) public supportedTokens; // maps to index of supportedTokensArr
     mapping(address => uint256) internal buyFee; //(eg 1.2 percent -> 120)
     mapping(address => uint256) internal sellFee; //(eg 1.2 percent -> 120)
 
@@ -23,7 +22,7 @@ contract Atola {
     event CryptoPurchase(address customerAddress, uint256 fiatAmount, uint256 cryptoAmount);
     event CryptoSale(address customerAddress, uint256 cryptoAmount, uint256 fiatAmount);
     event Refund(address customerAddress, uint256 cryptoAmount);
-    event EthRecieved(address customerAddress, uint256 cryptoAmount);
+    event EthReceived(address customerAddress, uint256 cryptoAmount);
 
     /// uint256 dailyOutLimit = 5.1234567891012131 ether; /* Ether */
 
@@ -51,32 +50,12 @@ contract Atola {
      * @dev Throws if called by any account other than thoses in the machineAddresses list
     */
     modifier onlyBtm() {
-        require(machineAddresses[msg.sender]>0);
+        require(machineAddresses[msg.sender] > 0);
         _;
     }
 
-    function removeMachineFromArrayAndMapping(address _machineToDelete) internal {
-      require(machineAddresses[_machineToDelete] > 0);
-      uint index = machineAddresses[_machineToDelete];
-
-      if (machineAddressesArr.length > 1) {
-        machineAddressesArr[index] = machineAddressesArr[machineAddressesArr.length-1];
-        machineAddresses[machineAddressesArr[index]] = index; // as we moved last element to index, we should update the mapping to reflect this
-      }
-      delete machineAddresses[_machineToDelete];
-      machineAddressesArr.length--; // Implicitly recovers gas from last element storage
-    }
-
-    function removeTokenFromArrayAndMapping(address _tokenToDelete) internal {
-      require(supportedTokens[_tokenToDelete] > 0);
-      uint index = supportedTokens[_tokenToDelete];
-
-      if (supportedTokensArr.length > 1) {
-        supportedTokensArr[index] = supportedTokensArr[supportedTokensArr.length-1];
-        supportedTokens[supportedTokensArr[index]] = index; // as we moved last element to index, we should update the mapping to reflect this
-      }
-      delete supportedTokens[_tokenToDelete];
-      supportedTokensArr.length--; // Implicitly recovers gas from last element storage
+    function getTokenCount() public view returns(uint count) {
+        return supportedTokensArr.length;
     }
 
     // ideally should do the following to avoid having the two functions above, included for testing
@@ -108,7 +87,7 @@ contract Atola {
     */
     function addMachine(address _machineAddress) external onlyOwner {
         uint256 len = machineAddressesArr.push(_machineAddress);
-        machineAddresses[_machineAddress] = len - 1;
+        machineAddresses[_machineAddress] = len;
     }
 
     /**
@@ -116,7 +95,6 @@ contract Atola {
      * @param _machineAddress The address of the BTM
     */
     function removeMachine(address _machineAddress) external onlyOwner {
-        //removeMachineFromArrayAndMapping(_machineAddress);
         removeItemFromArrayAndMapping(machineAddressesArr, machineAddresses, _machineAddress);
     }
 
@@ -156,13 +134,20 @@ contract Atola {
     function fiatToEth(uint256 _amountFiat, uint256 _tolerance, address _userAddress) external onlyBtm returns (bool) {
         require(buyFee[msg.sender] < 10000); // i'm not sure this is a good enough check, if it is we only need to do it once when setting fee
         uint256 fee = (_amountFiat * buyFee[msg.sender]) / 10000;
+        uint256 amountLessFee = _amountFiat - fee;
+        uint256 deadline = block.timestamp + 120;
 
-        //call approve
-        basetoken.approve(baseexchange, _amountFiat - fee);
+        // approve exchange for Atola
+        basetoken.approve(baseexchange, amountLessFee);
 
         //call uniswap
         UniswapExchangeInterface ex = UniswapExchangeInterface(baseexchange);
-        uint256 ethBought = ex.tokenToEthTransferInput(_amountFiat - fee, _tolerance, block.timestamp, _userAddress);
+        uint256 ethBought = ex.tokenToEthTransferInput(
+          amountLessFee,
+          _tolerance,
+          deadline,
+          _userAddress
+        );
 
         emit CryptoPurchase(_userAddress, _amountFiat, ethBought);
     }
@@ -273,6 +258,6 @@ contract Atola {
     */
     function() external payable {
         customerBalance[msg.sender] += msg.value;
-        emit EthRecieved(msg.sender, msg.value);
+        emit EthReceived(msg.sender, msg.value);
     }
 }

@@ -7,20 +7,31 @@
     "test": "test"
   },
   "dependencies": {
-    "truffle": "^5.0.3",
-    "web3": "^1.0.0-beta.52"
+    "truffle": "^5.0.22",
+    "web3": "^1.0.0-beta.52",
+    "web3x-codegen": "^4.0.1"
   },
   "devDependencies": {
     "babel-polyfill": "^6.26.0",
+    "bn.js": "^4.11.8",
     "cross-env": "^5.2.0",
     "solidity-docgen": "^0.1.0",
+    "truffle-typings": "^1.0.8",
     "yenv": "^2.1.0"
   },
   "scripts": {
-    "test": "mocha",
-    "compile": "cross-env NODE_ENV=development truffle compile",
+    "test": "truffle test",
+    "compile": "cross-env NODE_ENV=development truffle compile && yarn build:types",
     "migrate": "cross-env NODE_ENV=development truffle migrate",
-    "console": "cross-env NODE_ENV=development truffle console"
+    "console": "cross-env NODE_ENV=development truffle console",
+    "build:types": "web3x-codegen",
+    "build:tests": "tsc",
+    "build": "yarn compile && yarn build:types && yarn build:tests",
+    "clean:tests": "rm -rf test/",
+    "clean:truffle": "rm -rf build/",
+    "clean": "yarn clean:tests && yarn clean:truffle",
+    "cleanAndBuild": "yarn clean && yarn build",
+    "postinstall": "git submodule update --init"
   },
   "repository": {
     "type": "git",
