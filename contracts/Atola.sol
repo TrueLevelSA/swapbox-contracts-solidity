@@ -11,7 +11,7 @@ contract Atola {
     address[] public supportedTokensArr;
     address[] public machineAddressesArr;
 
-    mapping(address => uint256) internal machineAddresses; // maps to index of machineAddressesArr
+    mapping(address => uint256) public machineAddresses; // maps to index of machineAddressesArr
     mapping(address => uint256) public supportedTokens; // maps to index of supportedTokensArr
     mapping(address => uint256) internal buyFee; //(eg 1.2 percent -> 120)
     mapping(address => uint256) internal sellFee; //(eg 1.2 percent -> 120)
@@ -42,7 +42,7 @@ contract Atola {
      * @dev Throws if called by any account other than the owner.
     */
     modifier onlyOwner() {
-        require(msg.sender == owner);
+        require(msg.sender == owner, "not owner");
         _;
     }
 
@@ -50,7 +50,7 @@ contract Atola {
      * @dev Throws if called by any account other than thoses in the machineAddresses list
     */
     modifier onlyBtm() {
-        require(machineAddresses[msg.sender] > 0);
+        require(machineAddresses[msg.sender] > 0, "not a btm");
         _;
     }
 
@@ -60,7 +60,7 @@ contract Atola {
 
     // ideally should do the following to avoid having the two functions above, included for testing
     function removeItemFromArrayAndMapping(address[] storage array, mapping (address => uint256) storage itemMapping, address _itemToDelete) internal {
-      require(itemMapping[_itemToDelete] > 0);
+      require(itemMapping[_itemToDelete] > 0, "item not present");
       uint index = itemMapping[_itemToDelete];
 
       if (array.length > 1) {
@@ -73,12 +73,12 @@ contract Atola {
 
     /**
      * @dev Allows the current owner to transfer control of the contract to a newOwner.
-     * @param newOwner The address to transfer ownership to.
+     * @param _newOwner The address to transfer ownership to.
     */
-    function transferOwnership(address payable newOwner) external onlyOwner {
-        require(newOwner != address(0));
-        emit OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
+    function transferOwnership(address payable _newOwner) external onlyOwner {
+        require(_newOwner != address(0), "owner cannot be zero");
+        emit OwnershipTransferred(owner, _newOwner);
+        owner = _newOwner;
     }
 
     /**
@@ -86,6 +86,7 @@ contract Atola {
      * @param _machineAddress The address of the BTM
     */
     function addMachine(address _machineAddress) external onlyOwner {
+        require(_machineAddress != address(0), "machine cannot be zero");
         uint256 len = machineAddressesArr.push(_machineAddress);
         machineAddresses[_machineAddress] = len;
     }
@@ -105,6 +106,8 @@ contract Atola {
      * @param _sellFee Default sell fee on this machine
     */
     function modifyBtm(address _machineAddress, uint256 _buyFee, uint256 _sellFee) external onlyOwner {
+        require(buyFee[msg.sender] < 10000, "buy fee must be under 100%");   // prevent underflow
+        require(sellFee[msg.sender] < 10000, "sell fee must be under 100%"); // prevent underflow
         buyFee[_machineAddress] = _buyFee;
         sellFee[_machineAddress] = _sellFee;
     }
@@ -114,8 +117,9 @@ contract Atola {
      * @param _token The address of the token contract (warning: make sure it's compliant)
     */
     function addToken(address _token) external onlyOwner {
+      require(_token != address(0), "token cannot be zero");
       uint256 len = supportedTokensArr.push(_token);
-      supportedTokens[_token] = len - 1;
+      supportedTokens[_token] = len;
     }
 
     /**
@@ -132,7 +136,6 @@ contract Atola {
      * @param _userAddress Users crypto address
     */
     function fiatToEth(uint256 _amountFiat, uint256 _tolerance, address _userAddress) external onlyBtm returns (bool) {
-        require(buyFee[msg.sender] < 10000); // i'm not sure this is a good enough check, if it is we only need to do it once when setting fee
         uint256 fee = (_amountFiat * buyFee[msg.sender]) / 10000;
         uint256 amountLessFee = _amountFiat - fee;
         uint256 deadline = block.timestamp + 120;
@@ -158,15 +161,14 @@ contract Atola {
      * @param _amountFiat Amount of fiat machine reports to have recieved (18 decimal places)
      * @param _userAddress Users crypto address
     */
-    function fiatToBaseTokens(uint256 _amountFiat, address payable _userAddress) external onlyBtm returns (bool) {
-        require(buyFee[msg.sender] < 10000); // i'm not sure this is a good enough check, if it is we only need to do it once when setting fee
+    /* function fiatToBaseTokens(uint256 _amountFiat, address payable _userAddress) external onlyBtm returns (bool) {
         uint256 fee = (_amountFiat * buyFee[msg.sender]) / 10000;
 
         //call transfer
         basetoken.transfer(address(_userAddress), _amountFiat - fee);
 
         emit CryptoPurchase(_userAddress, _amountFiat, _amountFiat - fee);
-    }
+    } */
 
     // Owner Functions
 
@@ -212,15 +214,13 @@ contract Atola {
 
     /**
      * @dev Allows customer to claim refund if order hasn't been processed (TO-DO add a delay to this to avoid double spend race)
-     * @param _user Customer address
      * @param _amount Refund amount
     */
-    function refund(address payable _user, uint256 _amount) public {
-        require(msg.sender == _user);
-        require(customerBalance[_user] > _amount);
-        customerBalance[_user] -= _amount;
-        _user.transfer(customerBalance[_user]);
-        emit Refund(_user, _amount);
+    function refund(uint256 _amount) public {
+        require(customerBalance[msg.sender] > _amount, "cannot refund more than the balance");
+        customerBalance[msg.sender] -= _amount;
+        msg.sender.transfer(_amount);
+        emit Refund(msg.sender, _amount);
     }
 
     /**
@@ -229,14 +229,12 @@ contract Atola {
      * @param _amountFiat Amount to process
     */
     function ethToFiat(address payable _user, uint256 _amountFiat) public onlyBtm {
-
-        require(sellFee[msg.sender] < 10000); // i'm not sure if this is a good enough check, if it is we only need to do it once when setting fee
         uint256 fee = (_amountFiat * sellFee[msg.sender]) / 10000;
         //call uniswap
         UniswapExchangeInterface ex = UniswapExchangeInterface(baseexchange);
 
         uint256 ethSold = ex.ethToTokenTransferOutput.value(customerBalance[_user])(_amountFiat + fee, block.timestamp, _user);
-
+        require(ethSold <= customerBalance[_user], "cannot sell more than the customer has");
         customerBalance[_user] -= ethSold;
 
         // Send change to the user (the alternative is for the change to be processed on a seperate contract call :/)
