@@ -16,6 +16,11 @@ geth --exec "loadScript('scripts/unlock.js')" attach ipc://tmp/geth.ipc
 ```
 It will unlock 9 more accounts (so 10 in total) and prefund them with 1000 ETH each.
 
+Documentation
+-------------
+
+Documentation for the [`Atola.sol`][atola-contract] smart contract is available at [doc/Atola.md][atola-doc].
+
 Compiling & Deployment
 ----------------------
 ```sh
@@ -43,3 +48,6 @@ Issues
 allow only selling of ether (otherwise users would need to call approve
 prior to using the machine; maybe have a solution for this).   Hopefully 777 (and its adoption sorts
 this out).
+
+[atola-contract]: ./contracts/Atola.sol
+[atola-doc]: ./doc/Atola.md
