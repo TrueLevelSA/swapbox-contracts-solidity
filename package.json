@@ -43,7 +43,7 @@
     "url": "git+ssh://git@gitlab.com/atola/smart-contract.git"
   },
   "author": "tshabs",
-  "license": "AGPLv3",
+  "license": "AGPL-3.0-or-later",
   "bugs": {
     "url": "https://gitlab.com/atola/smart-contract/issues"
   },
