@@ -3,6 +3,12 @@
 README
 ======
 
+Install
+------------
+```
+yarn
+```
+
 Prerequisites
 -------------
 Make sure to have a local node (geth), vyper (v0.1.0-beta.4, breaking changes afterwards) and truffle installed
