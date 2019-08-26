@@ -20,7 +20,7 @@ const AtolaArtifacts = artifacts.require("Atola");
 import { Atola } from './types/Atola';
 import { Address } from 'web3x/address';
 import { Eth } from 'web3x/eth';
-import { fromWei, toWei } from 'web3x/utils';
+import { toWei } from 'web3x/utils';
 const config = (process.env.NODE_ENV === 'production')
   ? require('../config/ropsten.json')
   : require('../config/local.json')
