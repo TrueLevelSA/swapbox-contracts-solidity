@@ -3179,10 +3179,9 @@ web3x@^4.0.4:
     utf8 "^3.0.0"
     ws "^6.1.0"
 
-websocket@^1.0.28:
-  version "1.0.28"
-  resolved "https://registry.yarnpkg.com/websocket/-/websocket-1.0.28.tgz#9e5f6fdc8a3fe01d4422647ef93abdd8d45a78d3"
-  integrity sha512-00y/20/80P7H4bCYkzuuvvfDvh+dgtXi5kzDf3UcZwN6boTYaKvsrtZ5lIYm1Gsg48siMErd9M4zjSYfYFHTrA==
+"websocket@github:web3-js/WebSocket-Node#polyfill/globalThis":
+  version "1.0.29"
+  resolved "https://codeload.github.com/web3-js/WebSocket-Node/tar.gz/905deb4812572b344f5801f8c9ce8bb02799d82e"
   dependencies:
     debug "^2.2.0"
     es5-ext "^0.10.50"
