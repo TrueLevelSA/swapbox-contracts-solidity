@@ -72,6 +72,7 @@ contract('Atola', (accounts) => {
     const receipt = await txSend.getReceipt();
 
     assert.isDefined(hash, 'tx doesnt have a hash');
+    // @ts-ignore: on purpose checking if object is undefined or not
     assert.isDefined(receipt.events["CryptoPurchase"][0], 'didnt throw a CryptoPurchase event');
   });
 
