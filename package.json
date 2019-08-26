@@ -17,6 +17,7 @@
     "cross-env": "^5.2.0",
     "solidity-docgen": "^0.1.0",
     "truffle-typings": "^1.0.8",
+    "web3x": "^4.0.4",
     "yenv": "^2.1.0"
   },
   "scripts": {
