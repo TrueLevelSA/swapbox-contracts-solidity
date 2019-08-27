@@ -15,8 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { UniswapExchangeInterface } from './types/UniswapExchangeInterface';
-import { ERC20 } from './types/ERC20';
-import { fromWei, toBN } from 'web3x/utils';
 import { Address } from 'web3x/address';
 import { Eth } from 'web3x/eth';
 
@@ -26,7 +24,7 @@ const config = (process.env.NODE_ENV === 'production')
 
 
 
-contract('Uniswap Exchange', (accounts) => {
+contract('Uniswap Exchange', () => {
   let eth: Eth;
   let exchange: UniswapExchangeInterface;
   let exchangeAddress: Address;

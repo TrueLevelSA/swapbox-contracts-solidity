@@ -20,6 +20,7 @@
     "cross-env": "^5.2.0",
     "solmd": "^0.4.0",
     "truffle-typings": "^1.0.8",
+    "web3x": "^4.0.4",
     "yenv": "^2.1.0"
   },
   "scripts": {
@@ -42,7 +43,7 @@
     "url": "git+ssh://git@gitlab.com/atola/smart-contract.git"
   },
   "author": "tshabs",
-  "license": "AGPLv3",
+  "license": "AGPL-3.0-or-later",
   "bugs": {
     "url": "https://gitlab.com/atola/smart-contract/issues"
   },
