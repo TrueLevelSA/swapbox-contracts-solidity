@@ -1,5 +1,5 @@
 {
-  "outputPath": "./test_ts/types",
+  "outputPath": "./src/contracts",
   "contracts": {
     "Atola": {
       "source": "truffle",
