@@ -3131,10 +3131,10 @@ web3x-codegen@^4.0.1:
     typescript "^3.2.2"
     web3x "^4.0.0"
 
-web3x@^4.0.0:
-  version "4.0.3"
-  resolved "https://registry.yarnpkg.com/web3x/-/web3x-4.0.3.tgz#78231733e90b0d0a86d8c408b2de9ef463a4098a"
-  integrity sha512-YF4+2u1nFiwjy7SY5YQTczfhSQF3Y0Vqywxb/uqzcitGu2OxdWpEQjqd9JIVXwPtR3bd6mqzUvlev7WYqajHNg==
+web3x@4.0.4:
+  version "4.0.4"
+  resolved "https://registry.yarnpkg.com/web3x/-/web3x-4.0.4.tgz#e99a1361c4a541755acbcb3a11c3a12504a236f5"
+  integrity sha512-+Kze5u/0/+4Xc/VVbDUsfEFIJNaVMiaXRyjo9o1f1sPmbBdzUT+dVFuTe0hpg0H8fLXROuVN7KYoVdVJYUxrvw==
   dependencies:
     "@types/bn.js" "^4.11.2"
     "@types/node" "^10.12.18"
@@ -3155,10 +3155,10 @@ web3x@^4.0.0:
     utf8 "^3.0.0"
     ws "^6.1.0"
 
-web3x@^4.0.4:
-  version "4.0.4"
-  resolved "https://registry.yarnpkg.com/web3x/-/web3x-4.0.4.tgz#e99a1361c4a541755acbcb3a11c3a12504a236f5"
-  integrity sha512-+Kze5u/0/+4Xc/VVbDUsfEFIJNaVMiaXRyjo9o1f1sPmbBdzUT+dVFuTe0hpg0H8fLXROuVN7KYoVdVJYUxrvw==
+web3x@^4.0.0:
+  version "4.0.3"
+  resolved "https://registry.yarnpkg.com/web3x/-/web3x-4.0.3.tgz#78231733e90b0d0a86d8c408b2de9ef463a4098a"
+  integrity sha512-YF4+2u1nFiwjy7SY5YQTczfhSQF3Y0Vqywxb/uqzcitGu2OxdWpEQjqd9JIVXwPtR3bd6mqzUvlev7WYqajHNg==
   dependencies:
     "@types/bn.js" "^4.11.2"
     "@types/node" "^10.12.18"
