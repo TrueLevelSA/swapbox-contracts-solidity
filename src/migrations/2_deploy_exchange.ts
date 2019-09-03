@@ -14,8 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-const fs = require('fs')
-const path = require('path')
+import BN from "bn.js";
+import * as fs from "fs";
+import * as path from "path";
 const utils = require('../scripts/utils.js')
 const CONFIG = path.resolve(__dirname, '../config')
 const LOCAL_CONFIG = path.join(CONFIG, 'private.json')
@@ -27,8 +28,6 @@ const TokenXchf = artifacts.require('XCHF')
 const UniSwapExchangeTemplate = artifacts.require('uniswap_exchange')
 const UniSwapFactory = artifacts.require('uniswap_factory')
 const UniswapExchangeInterface = artifacts.require('UniswapExchangeInterface');
-
-const BN = web3.utils.BN;
 
 /**
  * Deploy a standard ERC20 Token and return the truffle instance of the contract.
