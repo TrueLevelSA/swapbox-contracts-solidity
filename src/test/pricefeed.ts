@@ -23,7 +23,7 @@ import BN from 'bn.js';
 
 const config = (process.env.NODE_ENV === 'production')
   ? require('../config/ropsten.json')
-  : require('../config/local.json')
+  : require('../config/private.json')
 
 contract('PriceFeed', () => {
   let eth: Eth;

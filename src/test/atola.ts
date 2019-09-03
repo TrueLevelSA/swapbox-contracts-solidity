@@ -23,7 +23,7 @@ import { Eth } from 'web3x/eth';
 import { toWei } from 'web3x/utils';
 const config = (process.env.NODE_ENV === 'production')
   ? require('../config/ropsten.json')
-  : require('../config/local.json')
+  : require('../config/private.json')
 
 contract('Atola', (accounts) => {
   let eth: Eth;

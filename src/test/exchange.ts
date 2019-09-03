@@ -20,7 +20,7 @@ import { Eth } from 'web3x/eth';
 
 const config = (process.env.NODE_ENV === 'production')
   ? require('../config/ropsten.json')
-  : require('../config/local.json')
+  : require('../config/private.json')
 
 
 
