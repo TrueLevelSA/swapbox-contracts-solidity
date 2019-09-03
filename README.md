@@ -5,11 +5,17 @@ README
 
 Install
 ------------
-```
+```bash
 yarn
 ```
 
-Prerequisites
+Build
+-----
+```bash
+yarn build
+```
+
+Prerequisites (deploy/tests)
 -------------
 Make sure to have a local node (geth), vyper (v0.1.0-beta.4, breaking changes afterwards) and truffle installed
 
