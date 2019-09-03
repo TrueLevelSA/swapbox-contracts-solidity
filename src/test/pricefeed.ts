@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import { ERC20 } from './types/ERC20';
-import { PriceFeed } from './types/PriceFeed';
-import { UniswapExchange } from './types/UniswapExchange';
+import { ERC20 } from '../contracts/types/ERC20';
+import { PriceFeed } from '../contracts/types/PriceFeed';
+import { UniswapExchange } from '../contracts/types/UniswapExchange';
 import { Eth } from 'web3x/eth';
 import {  toWei } from 'web3x/utils';
 import BN from 'bn.js';

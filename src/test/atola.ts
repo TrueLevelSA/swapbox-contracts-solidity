@@ -17,7 +17,7 @@
 import BN from "bn.js";
 
 const AtolaArtifacts = artifacts.require("Atola");
-import { Atola } from './types/Atola';
+import { Atola } from '../contracts/types/Atola';
 import { Address } from 'web3x/address';
 import { Eth } from 'web3x/eth';
 import { toWei } from 'web3x/utils';
