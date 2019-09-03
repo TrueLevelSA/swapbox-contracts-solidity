@@ -13,7 +13,6 @@
     "forceConsistentCasingInFileNames": true,
     "lib": ["es2015", "esnext.asynciterable"],
 
-    "sourceMap": true,
     "typeRoots": ["./node_modules/@types", "./types"],
 
     "rootDir": "./src",
