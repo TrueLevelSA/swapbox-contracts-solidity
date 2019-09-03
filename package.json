@@ -31,7 +31,7 @@
     "build:doc": "solmd --no-toc contracts/Atola.sol --dest doc/Atola.md",
     "build:types": "web3x-codegen",
     "build:tests": "tsc",
-    "build": "yarn compile && yarn build:doc && yarn build:types && yarn build:tests",
+    "build": "yarn compile && yarn build:doc && yarn build:tests",
     "clean:tests": "rm -rf test/",
     "clean:truffle": "rm -rf build/",
     "clean:types": "rm -rf src/contracts",
