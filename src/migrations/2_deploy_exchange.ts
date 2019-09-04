@@ -17,6 +17,11 @@
 import BN from "bn.js";
 import * as fs from "fs";
 import * as path from "path";
+
+import { Address } from "web3x/address";
+import { Eth } from "web3x/eth";
+import { WebsocketProvider } from "web3x/providers";
+
 const utils = require('../scripts/utils.js')
 const CONFIG = path.resolve(__dirname, '../config')
 const LOCAL_CONFIG = path.join(CONFIG, 'private.json')
@@ -29,50 +34,64 @@ const UniSwapExchangeTemplate = artifacts.require('uniswap_exchange')
 const UniSwapFactory = artifacts.require('uniswap_factory')
 const UniswapExchangeInterface = artifacts.require('UniswapExchangeInterface');
 
+import { ERC20 } from "../contracts/types/ERC20";
+import { UniswapFactory } from "../contracts/types/UniswapFactory";
+import { UniswapExchange } from "../contracts/types/UniswapExchange";
+
+
+interface ITokenParameters {
+  name: string;
+  symbols: string;
+  decimals: number;
+  supply: BN;
+}
+
 /**
  * Deploy a standard ERC20 Token and return the truffle instance of the contract.
  *
  * @param config {name, symbol, decimals, supply}
  * @param account The web3 account from which we deploy the Token
  */
-const createToken = (config) => {
-  return TokenErc20.new(
-    utils.stringToBytes32(config.name),
-    utils.stringToBytes32(config.symbol),
-    utils.numberToUint(config.decimals),
-    utils.numberToUint(config.supply),
-  );
+const createToken = async (eth: Eth, parameters: ITokenParameters) => {
+  const token = new ERC20(eth);
+  return token.deploy(
+    config.name,
+    config.symbols,
+    config.decimals,
+    config.supply
+  ).send();
 }
 
 /**
  * Deploy a Uniswap Exchange for the given token.
  *
- * @param factory The Uniswap Factory truffle contract
+ * @param factory The Uniswap Factory
  * @param token The Token for which we create the exchange
  */
-const createExchange = async (factory, token) => {
-  let exchangeAddress;
+const createExchange = async (factory: UniswapFactory, tokenAddress: Address) => {
   try {
-    const createTx = await factory.createExchange(token.address, { gas: 4712388 })
-    // Retrieve the created Exchange address from the logs
-    exchangeAddress = createTx.receipt.logs[0].args.exchange
+    return factory.methods.createExchange(tokenAddress).send().getReceipt(); // gas: 4712388 jic
   } catch (e) {
     console.error('Failed to deploy Exchange', e)
+    return Address.ZERO;
   }
-
-  return UniswapExchangeInterface.at(exchangeAddress);
 }
 
-module.exports = async (deployer, network, accounts) => {
+/**
+ * Main.
+ *
+ */
+
+module.exports = async (deployer: Truffle.Deployer, network: string, accounts: Truffle.Accounts) => {
   if (network === 'production') {
     console.error('Not deploying anything uniswap-related while in production');
     return;
   }
+  const provider = new WebsocketProvider(web3.currentProvider.connection.url);
+  const eth = new Eth(provider);
 
-  // Use the Factory to create the exchange
-  const template = await UniSwapExchangeTemplate.new();
-
-  // Create the UniSwap Factory
+  const uniSwapExchangeTemplate = await UniSwapExchangeTemplate.new();
+  const uniswapFactory = new UniswapFactory()
   const factory = await deployer.deploy(UniSwapFactory)
 
   // Set the template address
