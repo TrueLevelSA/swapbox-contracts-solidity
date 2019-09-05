@@ -14,18 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-const fs = require('fs')
-const path = require('path')
-const Atola = artifacts.require('Atola')
-const PriceFeed = artifacts.require('PriceFeed')
-const TokenXchf = artifacts.require('XCHF')
+import { Atola } from "../contracts/types/Atola";
+import { PriceFeed } from "../contracts/types/PriceFeed";
+import { XCHF } from "../contracts/types/XCHF";
+
+import * as fs from "fs";
+import * as path from "path";
 const CONFIG = path.resolve(__dirname, '../config')
 const LOCAL_CONFIG = path.join(CONFIG, 'private.json')
-const config = (process.env.NODE_ENV === 'production')
-  ? require('../config/ropsten.json')
-  : require(LOCAL_CONFIG)
 
 if (!config) { throw new Error('Missing config file') }
+import * as config from "../../config/private.json";
 
 const baseToken = config.BASE_TOKEN
 const baseExchange = config.UNISWAP_EXCHANGE
