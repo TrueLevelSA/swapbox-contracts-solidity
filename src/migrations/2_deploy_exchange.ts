@@ -20,136 +20,62 @@ import * as path from "path";
 
 import { Address } from "web3x/address";
 import { Eth } from "web3x/eth";
-import { WebsocketProvider } from "web3x/providers";
 
-const utils = require('../scripts/utils.js')
 const CONFIG = path.resolve(__dirname, '../config')
 const LOCAL_CONFIG = path.join(CONFIG, 'private.json')
 
-// Require the contract name and not the file name
-// https://ethereum.stackexchange.com/a/48643/24916
-const TokenErc20 = artifacts.require('ERC20')
-const TokenXchf = artifacts.require('XCHF')
-const UniSwapExchangeTemplate = artifacts.require('uniswap_exchange')
-const UniSwapFactory = artifacts.require('uniswap_factory')
-const UniswapExchangeInterface = artifacts.require('UniswapExchangeInterface');
-
-import { ERC20 } from "../contracts/types/ERC20";
+import { XCHF } from "../contracts/types/XCHF";
 import { UniswapFactory } from "../contracts/types/UniswapFactory";
 import { UniswapExchange } from "../contracts/types/UniswapExchange";
 
-
-interface ITokenParameters {
-  name: string;
-  symbols: string;
-  decimals: number;
-  supply: BN;
-}
-
-/**
- * Deploy a standard ERC20 Token and return the truffle instance of the contract.
- *
- * @param config {name, symbol, decimals, supply}
- * @param account The web3 account from which we deploy the Token
- */
-const createToken = async (eth: Eth, parameters: ITokenParameters) => {
-  const token = new ERC20(eth);
-  return token.deploy(
-    config.name,
-    config.symbols,
-    config.decimals,
-    config.supply
-  ).send();
-}
-
-/**
- * Deploy a Uniswap Exchange for the given token.
- *
- * @param factory The Uniswap Factory
- * @param token The Token for which we create the exchange
- */
-const createExchange = async (factory: UniswapFactory, tokenAddress: Address) => {
-  try {
-    return factory.methods.createExchange(tokenAddress).send().getReceipt(); // gas: 4712388 jic
-  } catch (e) {
-    console.error('Failed to deploy Exchange', e)
-    return Address.ZERO;
-  }
-}
-
 /**
  * Main.
- *
  */
-
 module.exports = async (deployer: Truffle.Deployer, network: string, accounts: Truffle.Accounts) => {
   if (network === 'production') {
     console.error('Not deploying anything uniswap-related while in production');
     return;
   }
-  const provider = new WebsocketProvider(web3.currentProvider.connection.url);
-  const eth = new Eth(provider);
+  const eth = Eth.fromCurrentProvider()!;
 
-  const uniSwapExchangeTemplate = await UniSwapExchangeTemplate.new();
-  const uniswapFactory = new UniswapFactory()
-  const factory = await deployer.deploy(UniSwapFactory)
+  // contracts.
+  const template = new UniswapExchange(eth);
+  const factory = new UniswapFactory(eth);
+  const tokenXCHF = new XCHF(eth);
 
-  // Set the template address
-  await factory.initializeFactory(template.address)
+  // deploy uniswap factory/template
+  await template.deploy().send().getReceipt();
+  await factory.deploy().send().getReceipt();
 
-  // Make a sanity check before moving forward. Since .createExchange() has mulitple
-  // asserts and that truffles error messages are sparse, we ensure the required
-  // values are defined before continuing.
-  const factoryInitialisationCheck = await factory.exchangeTemplate.call()
-  if (factoryInitialisationCheck === utils.zeroAddress) {
-    throw new Error('Failed to set exchange template')
-    process.exit(1)
-  }
+  // set template address
+  await factory.methods.initializeFactory(template.address!).send().getReceipt();
 
-  // deploy XCHF and SCND tokens
-  const tokenXchf = await TokenXchf.new();
-  const tokenScnd = await createToken({ name: 'Second Token', symbol: 'SCND', decimals: 18, supply: 10000000000000000000 });
+  // deploy XCHF
+  await tokenXCHF.deploy().send().getReceipt();
 
-  const exchangeXchf = await createExchange(factory, tokenXchf);
-  const exchangeScnd = await createExchange(factory, tokenScnd);
+  const receipt = await factory.methods.createExchange(tokenXCHF.address!).send().getReceipt();
+  const exchangeAddress = receipt.events!.NewExchange[0].address;
+  const exchange = new UniswapExchange(eth, exchangeAddress);
 
-  // Since the exchange address is not saved by truffle we generate a seperate
-  // config file.
+  // Since the exchange address is not saved by truffle we generate a seperate config file
   const settings = {
-    BASE_TOKEN: tokenXchf.address,
-    SECOND_TOKEN: tokenScnd.address,
+    BASE_TOKEN: tokenXCHF.address,
     UNISWAP_FACTORY: factory.address,
     UNISWAP_EXCHANGE_TEMPLATE: template.address,
-    UNISWAP_EXCHANGE: exchangeXchf.address,
-    UNISWAP_EXCHANGE_SCND: exchangeScnd.address,
+    UNISWAP_EXCHANGE: exchange.address,
   };
-
-  fs.writeFileSync(
-    LOCAL_CONFIG,
-    JSON.stringify(settings, undefined, 2),
-    'utf-8'
-  )
+  fs.writeFileSync(LOCAL_CONFIG, JSON.stringify(settings, undefined, 2), 'utf-8')
 
 
   // ADD LIQUIDITY TO EXCHANGE
   // =========================
-  const value = web3.utils.toWei(new BN(500));
-  const xchfValue = value.muln(200);
-  const liquidityProvider = accounts[1];
-
-  // deposit and approve `value` in both tokens
-  await tokenXchf.deposit({ from: liquidityProvider, value: value });
-  await tokenXchf.approve(exchangeXchf.address, xchfValue, { from: liquidityProvider });
-
-  await tokenScnd.deposit({ from: liquidityProvider, value: value });
-  await tokenScnd.approve(exchangeScnd.address, value, { from: liquidityProvider });
-
-  // function call parameters
-  const minLiquidity = 0;   // we don't care since `total_liquidity` will be 0
-  const maxTokens = value;   // 1000 tokens
+  const value = web3.utils.toWei(new BN(500)).muln(200).toString();
+  const from = Address.fromString(accounts[1]);
+  const minLiquidity = 0;   // not used for the first liquidity provider
   const deadline = Math.ceil(Date.now() / 1000) + ( 60 * 15) //15min. from now
 
-  // Add `value` liquidity to exchanges
-  await exchangeXchf.addLiquidity(minLiquidity, xchfValue, deadline, { from: liquidityProvider, value: value, });
-  await exchangeScnd.addLiquidity(minLiquidity, maxTokens, deadline, { from: liquidityProvider, value: value, });
+  // deposit/approve the token. then addLiquidity to exchange
+  await tokenXCHF.methods.deposit().send({ from, value });
+  await tokenXCHF.methods.approve(exchange.address!, value).send({ from });
+  await exchange.methods.addLiquidity(minLiquidity, value, deadline).send({from, value});
 };
