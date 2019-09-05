@@ -24,6 +24,10 @@
     "ERC20": {
       "source": "truffle",
       "buildFile": "./build/contracts/ERC20.json"
+    },
+    "XCHF": {
+      "source": "truffle",
+      "buildFile": "./build/contracts/XCHF.json"
     }
   }
 }
