@@ -2,7 +2,7 @@ const fs = require('fs')
 const path = require('path')
 const utils = require('../scripts/utils.js')
 const CONFIG = path.resolve(__dirname, '../config')
-const LOCAL_CONFIG = path.join(CONFIG, 'local.json')
+const LOCAL_CONFIG = path.join(CONFIG, 'private.json')
 
 // Require the contract name and not the file name
 // https://ethereum.stackexchange.com/a/48643/24916
