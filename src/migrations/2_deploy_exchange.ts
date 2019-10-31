@@ -20,6 +20,7 @@ import * as path from "path";
 
 import { Address } from "web3x/address";
 import { Eth } from "web3x/eth";
+import { LegacyProvider, LegacyProviderAdapter } from "web3x/providers";
 
 const CONFIG = path.resolve(__dirname, '../config')
 const LOCAL_CONFIG = path.join(CONFIG, 'private.json')
@@ -36,7 +37,12 @@ module.exports = async (deployer: Truffle.Deployer, network: string, accounts: T
     console.error('Not deploying anything uniswap-related while in production');
     return;
   }
-  const eth = Eth.fromCurrentProvider()!;
+
+  const acc = accounts.map(account => Address.fromString(account));
+  let from = acc[0];
+  
+  const eth = new Eth(new LegacyProviderAdapter(web3.currentProvider as LegacyProvider));
+
 
   // contracts.
   const template = new UniswapExchange(eth);
@@ -44,8 +50,10 @@ module.exports = async (deployer: Truffle.Deployer, network: string, accounts: T
   const tokenXCHF = new XCHF(eth);
 
   // deploy uniswap factory/template
-  await template.deploy().send().getReceipt();
-  await factory.deploy().send().getReceipt();
+  await template.deploy().send({from}).getReceipt();
+  console.log(`template deployed: ${template.address!}`);
+  await factory.deploy().send({from}).getReceipt();
+  console.log(`factory deployed: ${factory.address!}`);
 
   // set template address
   await factory.methods.initializeFactory(template.address!).send().getReceipt();
@@ -70,7 +78,7 @@ module.exports = async (deployer: Truffle.Deployer, network: string, accounts: T
   // ADD LIQUIDITY TO EXCHANGE
   // =========================
   const value = web3.utils.toWei(new BN(500)).muln(200).toString();
-  const from = Address.fromString(accounts[1]);
+  from = Address.fromString(accounts[1]);
   const minLiquidity = 0;   // not used for the first liquidity provider
   const deadline = Math.ceil(Date.now() / 1000) + ( 60 * 15) //15min. from now
 

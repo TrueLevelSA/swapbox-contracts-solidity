@@ -14,6 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import { Address } from "web3x/address";
+import { Eth } from "web3x/eth";
+
 import { Atola } from "../contracts/types/Atola";
 import { PriceFeed } from "../contracts/types/PriceFeed";
 import { XCHF } from "../contracts/types/XCHF";
@@ -23,38 +26,34 @@ import * as path from "path";
 const CONFIG = path.resolve(__dirname, '../config')
 const LOCAL_CONFIG = path.join(CONFIG, 'private.json')
 
-if (!config) { throw new Error('Missing config file') }
-import * as config from "../../config/private.json";
+import * as deployed from "../contracts/deployed/private.json";
 
-const baseToken = config.BASE_TOKEN
-const baseExchange = config.UNISWAP_EXCHANGE
-const secondExchange = config.UNISWAP_EXCHANGE_SCND
+const baseToken = Address.fromString(deployed.BASE_TOKEN);
+const baseExchange = Address.fromString(deployed.UNISWAP_EXCHANGE);
 
-module.exports = async (deployer, network, accounts) => {
-  await deployer.deploy(Atola, baseToken, baseExchange);
-  const atola = await Atola.deployed();
-  const priceFeed = await deployer.deploy(PriceFeed, atola.address);
-  const tokenXchf = await TokenXchf.at(baseToken)
+module.exports = async (deployer: Truffle.Deployer, network: string, accounts: Truffle.Accounts) => {
+  const eth = Eth.fromCurrentProvider()!;
 
-  config.ATOLA = atola.address;
-  config.PRICEFEED = priceFeed.address;
+  const atola = new Atola(eth);
+  const priceFeed = new PriceFeed(eth);
+  const token = new XCHF(eth, baseToken);
 
-  fs.writeFileSync(
-    LOCAL_CONFIG,
-    JSON.stringify(config, undefined, 2),
-    'utf-8'
-  )
+  // deploy ATOLA/PRICEFEED
+  await atola.deploy(baseToken, baseExchange).send().getReceipt();
+  await priceFeed.deploy(atola.address!).send().getReceipt();
 
-  // assuming for now that supportedTokens holds exchange addresses
-  await atola.addToken(baseExchange);
-  await atola.addToken(secondExchange);
+  // copy deployed addresses, update ATOLA/PRICEFEED addresses and overwrite
+  const deployedCopy = { ...deployed };
+  deployedCopy.ATOLA = atola.address!.toString();
+  deployedCopy.PRICEFEED = priceFeed.address!.toString();
+  fs.writeFileSync(LOCAL_CONFIG, JSON.stringify(deployedCopy, undefined, 2), 'utf-8');
 
-  // in dev mode create an account for the machine
-  if (network === 'development') {
-    const value = "1000000000000000000000"
-    await atola.addMachine(accounts[2]);
-    await tokenXchf.deposit({from: accounts[0], value: value})
-    await tokenXchf.transfer(config.ATOLA, value, {from: accounts[0]})
-    // await tokenXchf.approve(config.UNISWAP_EXCHANGE, "1000000000000000000000", {from: accounts[1]})
-  }
+  await atola.methods.addToken(baseExchange).send().getReceipt();
+
+  const acc = accounts.map(account => Address.fromString(account));
+
+  const value = "1000000000000000000000";
+  await atola.methods.addMachine(acc[2]);
+  await token.methods.deposit().send({from: acc[0], value: value}).getReceipt();
+  await token.methods.transfer(atola.address!, value).send({from: acc[0]}).getReceipt();
 };
