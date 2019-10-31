@@ -1,6 +1,5 @@
-node_modules
-build
-geth
-vyper
-config/private.json
-test/
+/node_modules
+/build
+/test
+/doc
+/migrations

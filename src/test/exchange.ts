@@ -14,13 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import { UniswapExchangeInterface } from './types/UniswapExchangeInterface';
+import { UniswapExchangeInterface } from '../contracts/types/UniswapExchangeInterface';
 import { Address } from 'web3x/address';
 import { Eth } from 'web3x/eth';
 
 const config = (process.env.NODE_ENV === 'production')
   ? require('../config/ropsten.json')
-  : require('../config/local.json')
+  : require('../config/private.json')
 
 
 
