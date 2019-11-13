@@ -18,10 +18,8 @@
 
     "rootDir": "./src",
     "outDir": "./",
-    "strict": true,
     "types": ["node", "./node_modules/truffle-typings"],
     "esModuleInterop": true,
-    "moduleResolution": "node"
   },
   "exclude": ["node_modules"]
 }
