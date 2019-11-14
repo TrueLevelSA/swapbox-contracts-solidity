@@ -22,7 +22,9 @@ import { Address } from "web3x/address";
 import { Eth } from "web3x/eth";
 import { LegacyProvider, LegacyProviderAdapter } from "web3x/providers";
 
-const PRIVATE_CONFIG = './contracts/deployed/private.json';
+const CFG = '../contracts/deployed/private.json';
+const PRIVATE_CONFIG = path.resolve(__dirname, CFG);
+
 
 import { XCHF } from "../contracts/types/XCHF";
 import { UniswapFactory } from "../contracts/types/UniswapFactory";
