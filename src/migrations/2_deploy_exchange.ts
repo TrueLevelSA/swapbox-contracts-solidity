@@ -93,10 +93,10 @@ module.exports = async (deployer: Truffle.Deployer, network: string, accounts: T
   const deadline = Math.ceil(Date.now() / 1000) + ( 60 * 15) //15min. from now
 
   // deposit/approve the token. then addLiquidity to exchange
-  await tokenXCHF.methods.deposit().send({ from, value }).getTxHash();
+  await tokenXCHF.methods.deposit().send({ from, value }).getReceipt();
   console.log("XCHF deposited");
-  await tokenXCHF.methods.approve(exchange.address!, value).send({ from }).getTxHash();
+  await tokenXCHF.methods.approve(exchange.address!, value).send({ from }).getReceipt();
   console.log("XCHF approved");
-  await exchange.methods.addLiquidity(minLiquidity, value, deadline).send({from, value}).getTxHash();
+  await exchange.methods.addLiquidity(minLiquidity, value, deadline).send({from, value}).getReceipt();
   console.log("Liquidity added");
 };
