@@ -85,6 +85,8 @@ module.exports = async (deployer: Truffle.Deployer, network: string, accounts: T
 
   // ADD LIQUIDITY TO EXCHANGE
   // =========================
+  // value:     100'000 ETH
+  //         20'000'000 XCHF
   const value = web3.utils.toWei(new BN(500)).muln(200).toString();
   from = Address.fromString(accounts[1]);
   const minLiquidity = 0;   // not used for the first liquidity provider
