@@ -65,7 +65,7 @@ module.exports = async (deployer: Truffle.Deployer, network: string, accounts: T
   console.log(`Token XCHF deployed: ${tokenXCHF.address!}`);
 
   const receipt = await factory.methods.createExchange(tokenXCHF.address!).send({from}).getReceipt();
-  const exchangeAddress = receipt.events!.NewExchange[0].address;
+  const exchangeAddress = receipt.events!.NewExchange[0].returnValues.exchange;
   const exchange = new UniswapExchange(eth, exchangeAddress);
   console.log(`Exchange deployed: ${exchangeAddress}`);
 
