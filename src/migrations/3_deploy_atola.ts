@@ -22,7 +22,9 @@ import { PriceFeed } from "../contracts/types/PriceFeed";
 import { XCHF } from "../contracts/types/XCHF";
 
 import * as fs from "fs";
-const PRIVATE_CONFIG = './contracts/deployed/private.json';
+import * as path from "path";
+const CFG = '../contracts/deployed/private.json';
+const PRIVATE_CONFIG = path.resolve(__dirname, CFG);
 
 import * as deployed from "../contracts/deployed/private.json";
 import { LegacyProviderAdapter, LegacyProvider } from "web3x/providers";
