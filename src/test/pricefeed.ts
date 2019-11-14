@@ -22,8 +22,8 @@ import {  toWei } from 'web3x/utils';
 import BN from 'bn.js';
 
 const config = (process.env.NODE_ENV === 'production')
-  ? require('../config/ropsten.json')
-  : require('../config/private.json')
+  ? require('../contracts/deployed/ropsten.json')
+  : require('../contracts/deployed/private.json')
 
 contract('PriceFeed', () => {
   let eth: Eth;
