@@ -22,38 +22,41 @@ import { PriceFeed } from "../contracts/types/PriceFeed";
 import { XCHF } from "../contracts/types/XCHF";
 
 import * as fs from "fs";
-import * as path from "path";
-const CONFIG = path.resolve(__dirname, '../config')
-const LOCAL_CONFIG = path.join(CONFIG, 'private.json')
+const PRIVATE_CONFIG = './contracts/deployed/private.json';
 
 import * as deployed from "../contracts/deployed/private.json";
+import { LegacyProviderAdapter, LegacyProvider } from "web3x/providers";
 
 const baseToken = Address.fromString(deployed.BASE_TOKEN);
 const baseExchange = Address.fromString(deployed.UNISWAP_EXCHANGE);
 
 module.exports = async (deployer: Truffle.Deployer, network: string, accounts: Truffle.Accounts) => {
-  const eth = Eth.fromCurrentProvider()!;
+  const eth = new Eth(new LegacyProviderAdapter(web3.currentProvider as LegacyProvider));
 
+  const acc = accounts.map(account => Address.fromString(account));
+  let from = acc[0];
+  
   const atola = new Atola(eth);
   const priceFeed = new PriceFeed(eth);
-  const token = new XCHF(eth, baseToken);
-
+  const token = new XCHF(eth, baseToken);  
+  
   // deploy ATOLA/PRICEFEED
-  await atola.deploy(baseToken, baseExchange).send().getReceipt();
-  await priceFeed.deploy(atola.address!).send().getReceipt();
+  await atola.deploy(baseToken, baseExchange).send({from}).getReceipt();
+  console.log(`Atola deployed: ${atola.address}`);
+  await priceFeed.deploy(atola.address!).send({from}).getReceipt();
+  console.log(`PriceFeed deployed: ${priceFeed.address}`);
+  
 
   // copy deployed addresses, update ATOLA/PRICEFEED addresses and overwrite
   const deployedCopy = { ...deployed };
   deployedCopy.ATOLA = atola.address!.toString();
   deployedCopy.PRICEFEED = priceFeed.address!.toString();
-  fs.writeFileSync(LOCAL_CONFIG, JSON.stringify(deployedCopy, undefined, 2), 'utf-8');
+  fs.writeFileSync(PRIVATE_CONFIG, JSON.stringify(deployedCopy, undefined, 2), 'utf-8');
 
-  await atola.methods.addToken(baseExchange).send().getReceipt();
-
-  const acc = accounts.map(account => Address.fromString(account));
+  await atola.methods.addToken(baseExchange).send({from}).getReceipt();
 
   const value = "1000000000000000000000";
-  await atola.methods.addMachine(acc[2]);
+  await atola.methods.addMachine(acc[2]).send({from}).getReceipt();
   await token.methods.deposit().send({from: acc[0], value: value}).getReceipt();
   await token.methods.transfer(atola.address!, value).send({from: acc[0]}).getReceipt();
 };
