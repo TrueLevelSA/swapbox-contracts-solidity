@@ -34,7 +34,7 @@
     "build": "yarn compile && yarn build:doc && yarn build:ts",
     "clean:ts": "rm -rf test/ && rm -rf migrations/",
     "clean:truffle": "rm -rf build/",
-    "clean:types": "rm -rf src/contracts",
+    "clean:types": "rm -rf src/contracts/types",
     "clean": "yarn clean:ts && yarn clean:truffle && yarn clean:types",
     "cleanAndBuild": "yarn clean && yarn build",
     "postinstall": "git submodule update --init"

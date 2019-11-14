@@ -22,8 +22,7 @@ import { Address } from "web3x/address";
 import { Eth } from "web3x/eth";
 import { LegacyProvider, LegacyProviderAdapter } from "web3x/providers";
 
-const CONFIG = path.resolve(__dirname, '../config')
-const LOCAL_CONFIG = path.join(CONFIG, 'private.json')
+const PRIVATE_CONFIG = './contracts/deployed/private.json';
 
 import { XCHF } from "../contracts/types/XCHF";
 import { UniswapFactory } from "../contracts/types/UniswapFactory";
@@ -48,22 +47,27 @@ module.exports = async (deployer: Truffle.Deployer, network: string, accounts: T
   const template = new UniswapExchange(eth);
   const factory = new UniswapFactory(eth);
   const tokenXCHF = new XCHF(eth);
-
+  
   // deploy uniswap factory/template
   await template.deploy().send({from}).getReceipt();
-  console.log(`template deployed: ${template.address!}`);
+  console.log(`Template deployed: ${template.address!}`);
   await factory.deploy().send({from}).getReceipt();
-  console.log(`factory deployed: ${factory.address!}`);
+  console.log(`Factory deployed: ${factory.address!}`);
+  
 
   // set template address
-  await factory.methods.initializeFactory(template.address!).send().getReceipt();
+  await factory.methods.initializeFactory(template.address!).send({from}).getReceipt();
+  console.log('Template address set in Factory');
+  
 
   // deploy XCHF
-  await tokenXCHF.deploy().send().getReceipt();
+  await tokenXCHF.deploy().send({from}).getReceipt();
+  console.log(`Token XCHF deployed: ${tokenXCHF.address!}`);
 
-  const receipt = await factory.methods.createExchange(tokenXCHF.address!).send().getReceipt();
-  const exchangeAddress = receipt.events!.NewExchange[0].address;
+  const receipt = await factory.methods.createExchange(tokenXCHF.address!).send({from}).getReceipt();
+  const exchangeAddress = receipt.events!.NewExchange[0].returnValues.exchange;
   const exchange = new UniswapExchange(eth, exchangeAddress);
+  console.log(`Exchange deployed: ${exchangeAddress}`);
 
   // Since the exchange address is not saved by truffle we generate a seperate config file
   const settings = {
@@ -72,18 +76,27 @@ module.exports = async (deployer: Truffle.Deployer, network: string, accounts: T
     UNISWAP_EXCHANGE_TEMPLATE: template.address,
     UNISWAP_EXCHANGE: exchange.address,
   };
-  fs.writeFileSync(LOCAL_CONFIG, JSON.stringify(settings, undefined, 2), 'utf-8')
+  fs.writeFileSync(PRIVATE_CONFIG, JSON.stringify(settings, undefined, 2), 'utf-8');
+  console.log("saved to file as:");
+  console.table(settings);
+  
+  
 
 
   // ADD LIQUIDITY TO EXCHANGE
   // =========================
+  // value:     100'000 ETH
+  //         20'000'000 XCHF
   const value = web3.utils.toWei(new BN(500)).muln(200).toString();
   from = Address.fromString(accounts[1]);
   const minLiquidity = 0;   // not used for the first liquidity provider
   const deadline = Math.ceil(Date.now() / 1000) + ( 60 * 15) //15min. from now
 
   // deposit/approve the token. then addLiquidity to exchange
-  await tokenXCHF.methods.deposit().send({ from, value });
-  await tokenXCHF.methods.approve(exchange.address!, value).send({ from });
-  await exchange.methods.addLiquidity(minLiquidity, value, deadline).send({from, value});
+  await tokenXCHF.methods.deposit().send({ from, value }).getReceipt();
+  console.log("XCHF deposited");
+  await tokenXCHF.methods.approve(exchange.address!, value).send({ from }).getReceipt();
+  console.log("XCHF approved");
+  await exchange.methods.addLiquidity(minLiquidity, value, deadline).send({from, value}).getReceipt();
+  console.log("Liquidity added");
 };
