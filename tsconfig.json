@@ -7,21 +7,19 @@
     "strict": true,
     "moduleResolution": "node",
     "noImplicitThis": true,
+    "resolveJsonModule": true,
     "alwaysStrict": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "forceConsistentCasingInFileNames": true,
     "lib": ["es2015", "esnext.asynciterable"],
 
-    "sourceMap": true,
-    "typeRoots": ["./node_modules/@types", "./types"],
+    "typeRoots": ["./node_modules/@types"],
 
-    "rootDir": "./test_ts",
-    "outDir": "./test",
-    "strict": true,
+    "rootDir": "./src",
+    "outDir": "./",
     "types": ["node", "./node_modules/truffle-typings"],
     "esModuleInterop": true,
-    "moduleResolution": "node"
   },
   "exclude": ["node_modules"]
 }
