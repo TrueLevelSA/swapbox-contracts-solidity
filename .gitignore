@@ -1,5 +1,10 @@
 /node_modules
-/build
-/test
 /doc
-/migrations
+
+#ts
+/dist
+
+# hardhat
+/artifacts
+/cache
+/typechain
