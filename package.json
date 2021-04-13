@@ -24,6 +24,10 @@
     "hardhat-typechain": "^0.3.5",
     "solmd": "^0.4.0",
     "truffle-typings": "^1.0.8",
+    "ts-generator": "^0.1.1",
+    "ts-node": "^9.1.1",
+    "typechain": "^4.0.3",
+    "typescript": "^4.2.4",
     "yenv": "^2.1.0"
   },
   "scripts": {
