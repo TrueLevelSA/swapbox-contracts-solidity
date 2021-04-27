@@ -1,8 +1,14 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomiclabs/hardhat-waffle";
 import "hardhat-typechain";
+import "hardhat-docgen";
 
 const config: HardhatUserConfig = {
+    docgen: {
+        path: './docs',
+        clear: true,
+        runOnCompile: true,
+    },
     solidity: {
         compilers: [
             {

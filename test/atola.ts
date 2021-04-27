@@ -14,50 +14,45 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import BN from "bn.js";
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import chai from 'chai';
+import { solidity } from 'ethereum-waffle';
+import { ethers } from "hardhat";
+import { deploy } from "../scripts/deploy_utils";
+import { Atola, CryptoFranc } from '../typechain';
+import { ERC20, UniswapV2Pair } from '../typechain-extra';
 
-import { Atola, Atola__factory, UniswapExchange__factory, UniswapFactory__factory, XCHF__factory } from '../typechain';
-import { expect, use } from 'chai';
-import { MockProvider, solidity} from 'ethereum-waffle';
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { ethers } from "ethers";
-
-use(solidity);
+chai.use(solidity);
+const { expect } = chai;
 
 describe('Atola', () => {
-  const [deployer, user] = new MockProvider().getWallets();
+
+  let deployer: SignerWithAddress;
+  let user: SignerWithAddress;
+  let machine: SignerWithAddress;
 
   let atola: Atola;
-  let machineAddress: SignerWithAddress;
-  let exchangeAddress: string;
+  let uniswapExchange: UniswapV2Pair;
+  let tokenXCHF: CryptoFranc;
+  let tokenWETH: ERC20;
 
-  beforeEach(async() => {
-    // deploy uniswap and token
-    const uniswapFactory = await (new UniswapFactory__factory(deployer)).deploy();
-    const uniswapTemplate = await (new UniswapExchange__factory(deployer)).deploy();
-    const tokenXCHF = await (new XCHF__factory(deployer)).deploy();
+  beforeEach(async () => {
+    [deployer, user, machine] = await ethers.getSigners();
 
-    // init factory
-    uniswapFactory.initializeFactory(uniswapTemplate.address);
-
-    // get exchange address from factory deploy events
-    const receipt = await (await uniswapFactory.createExchange(tokenXCHF.address)).wait();
-    if (receipt.events !== undefined && receipt.events[0].args){
-      exchangeAddress = receipt.events[0].args[0];
-    } else {
-      console.log("events undefined, receipt: ", receipt);
-    }
-
-    atola = await (new Atola__factory(deployer)).deploy(tokenXCHF.address, exchangeAddress);
+    const deployment = await deploy(deployer);
+    atola = deployment.atola;
+    uniswapExchange = deployment.uniswapExchange;
+    tokenXCHF = deployment.tokenXCHF;
+    tokenWETH = deployment.tokenETH;
   })
 
   it('should have a correct baseexchange address', async () => {
     const baseExchange = await atola.baseexchange();
-    expect(baseExchange).to.equal(exchangeAddress);
+    expect(baseExchange).to.equal(uniswapExchange.address);
   });
 
   it('should have a correct token count', async () => {
-    const tokenCount = await atola.methods.getTokenCount().call();
+    const tokenCount = await atola.getTokenCount();
     expect(tokenCount).to.equal(2);
   });
 
@@ -71,8 +66,10 @@ describe('Atola', () => {
   });
 
   it('machine address is allowed as a BTM', async () => {
+    await atola.addMachine(machine.address);
+
     const machineAddressPractical = await atola.machineAddressesArr(0);
-    expect(machineAddress).to.equal(machineAddressPractical);
+    expect(machine.address).to.equal(machineAddressPractical);
   });
 
   it('throws an CrptoPurchase event after a fiatToEth order', async () => {
@@ -80,7 +77,7 @@ describe('Atola', () => {
     const tolerance = ethers.utils.formatEther(0.04); // tolerance should be 0 for buying
 
     // TxSend object
-    atola = atola.connect(machineAddress);
+    atola = atola.connect(machine.address);
     const tx = await atola.fiatToEth(amount, tolerance, user.address);
     const receipt = await tx.wait();
 
@@ -89,7 +86,7 @@ describe('Atola', () => {
     const event = receipt.events![0];
     expect(event.args).to.exist;
     expect(event.event).to.equal("CryptoPurchase")
- });
+  });
 
 
 });
