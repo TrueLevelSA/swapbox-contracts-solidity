@@ -1,7 +1,7 @@
 {
   "name": "smart-contract",
-  "version": "1.0.0",
-  "description": "README ======",
+  "version": "0.1.0",
+  "description": "Smart contracts for swap-box project.",
   "main": "truffle-config.js",
   "directories": {
     "test": "test"
