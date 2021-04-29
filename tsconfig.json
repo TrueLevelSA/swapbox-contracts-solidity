@@ -1,9 +1,8 @@
 {
   "compileOnSave": true,
   "compilerOptions": {
-    "target": "es2017",
+    "target": "es2020",
     "module": "commonjs",
-
     "strict": true,
     "moduleResolution": "node",
     "noImplicitThis": true,
@@ -12,14 +11,10 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "forceConsistentCasingInFileNames": true,
-    "lib": ["es2015", "esnext.asynciterable"],
 
-    "typeRoots": ["./node_modules/@types"],
-
-    "rootDir": "./src",
-    "outDir": "./",
-    "types": ["node", "./node_modules/truffle-typings"],
+    "outDir": "./dist",
     "esModuleInterop": true,
   },
-  "exclude": ["node_modules"]
+  "include": ["./scripts", "./test", "./typechain"],
+  "files": ["./hardhat.config.ts"]
 }

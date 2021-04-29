@@ -1,3 +1,0 @@
-[submodule "contracts/lib/uniswap"]
-	path = contracts/lib/uniswap
-	url = https://github.com/tshabs/contracts-vyper

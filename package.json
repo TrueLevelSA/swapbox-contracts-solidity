@@ -1,43 +1,43 @@
 {
   "name": "smart-contract",
-  "version": "1.0.0",
-  "description": "README ======",
+  "version": "0.1.0",
+  "description": "Smart contracts for the swapbox project.",
   "main": "truffle-config.js",
   "directories": {
     "test": "test"
   },
-  "dependencies": {
-    "truffle": "5.0.43",
-    "web3": "^1.0.0-beta.52",
-    "web3x": "4.0.4",
-    "web3x-codegen": "4.0.4"
-  },
+  "dependencies": {},
   "resolutions": {
     "solmd/solc": "0.5.8"
   },
   "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@openzeppelin/contracts": "^4.0.0",
+    "@typechain/ethers-v5": "^6.0.5",
+    "@uniswap/v2-core": "^1.0.1",
+    "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "babel-polyfill": "^6.26.0",
     "bn.js": "^4.11.8",
+    "chai": "^4.3.4",
     "cross-env": "^5.2.0",
-    "solmd": "^0.4.0",
+    "ethereum-waffle": "^3.3.0",
+    "ethers": "^5.0.0",
+    "hardhat": "^2.1.2",
+    "hardhat-docgen": "^1.1.1",
+    "hardhat-typechain": "^0.3.5",
     "truffle-typings": "^1.0.8",
+    "ts-generator": "^0.1.1",
+    "ts-node": "^9.1.1",
+    "typechain": "^4.0.3",
+    "typescript": "^4.2.4",
     "yenv": "^2.1.0"
   },
   "scripts": {
-    "test": "truffle test",
-    "compile": "truffle compile && yarn build:types",
-    "migrate": "truffle migrate",
-    "console": "truffle console",
-    "build:doc": "solmd --no-toc contracts/Atola.sol --dest doc/Atola.md",
-    "build:types": "web3x-codegen",
-    "build:ts": "tsc",
-    "build": "yarn compile && yarn build:doc && yarn build:ts",
-    "clean:ts": "rm -rf test/ && rm -rf migrations/",
-    "clean:truffle": "rm -rf build/",
-    "clean:types": "rm -rf src/contracts/types",
-    "clean": "yarn clean:ts && yarn clean:truffle && yarn clean:types",
-    "cleanAndBuild": "yarn clean && yarn build",
-    "postinstall": "git submodule update --init"
+    "clean": "yarn hardhat clean && rm -rf ./typechain ./typechain-extra ./dist",
+    "compile": "yarn hardhat compile && yarn compile:extra",
+    "compile:extra": "typechain \"./node_modules/@uniswap/v2-core/build/!(Combined-Json)*.json\" --target=ethers-v5 --outDir=typechain-extra",
+    "deploy": "yarn tsc && yarn hardhat run dist/scripts/deploy.js --network localhost"
   },
   "repository": {
     "type": "git",

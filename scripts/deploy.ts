@@ -14,8 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-const Migrations = artifacts.require("Migrations");
+import { ethers } from "hardhat";
+import { deploy } from "./deploy_utils";
 
-module.exports = function(deployer: Truffle.Deployer) {
-  deployer.deploy(Migrations);
-};
+async function main() {
+  const [deployer] = await ethers.getSigners()
+  const deployment = await deploy(deployer);
+  console.log("" + deployment);
+}
+
+main()
+  .then(() => process.exit(0))
+  .catch(error => {
+    console.error(error);
+    process.exit(1);
+  });
