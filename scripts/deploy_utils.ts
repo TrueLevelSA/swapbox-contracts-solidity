@@ -17,7 +17,7 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers } from "ethers";
 import { CryptoFranc, Atola, CryptoFranc__factory, Atola__factory } from "../typechain";
-import { UniswapV2Pair, ERC20, UniswapV2Factory__factory, ERC20__factory, UniswapV2Pair__factory } from "../typechain-extra";
+import { UniswapV2Pair, ERC20, UniswapV2Factory__factory, ERC20__factory, UniswapV2Pair__factory } from "../typechain";
 
 
 // Deployment

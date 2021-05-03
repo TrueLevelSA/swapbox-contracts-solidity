@@ -19,8 +19,7 @@ import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
 import { ethers } from "hardhat";
 import { deploy } from "../scripts/deploy_utils";
-import { Atola, CryptoFranc } from '../typechain';
-import { ERC20, UniswapV2Pair } from '../typechain-extra';
+import { Atola, CryptoFranc, ERC20, UniswapV2Pair } from '../typechain';
 
 chai.use(solidity);
 const { expect } = chai;

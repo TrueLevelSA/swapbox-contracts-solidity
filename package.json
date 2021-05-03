@@ -14,12 +14,15 @@
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@openzeppelin/contracts": "^4.0.0",
-    "@typechain/ethers-v5": "^6.0.5",
+    "@typechain/ethers-v5": "^9.0.0",
     "@typechain/hardhat": "^5.0.0",
+    "@types/chai": "^4.3.0",
+    "@types/mocha": "^9.1.0",
+    "@types/node": "^17.0.21",
     "@uniswap/v2-core": "^1.0.1",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "bn.js": "^4.11.8",
-    "chai": "^4.3.4",
+    "chai": "^4.3.6",
     "cross-env": "^5.2.0",
     "ethereum-waffle": "^3.3.0",
     "ethers": "^5.0.0",
@@ -27,15 +30,14 @@
     "hardhat-docgen": "^1.1.1",
     "ts-generator": "^0.1.1",
     "ts-node": "^9.1.1",
-    "typechain": "^4.0.3",
+    "typechain": "^7.0.0",
     "typescript": "^4.2.4",
     "yenv": "^2.1.0"
   },
   "scripts": {
     "clean": "yarn hardhat clean && rm -rf ./typechain ./typechain-extra ./dist",
-    "compile": "yarn hardhat compile && yarn compile:extra",
-    "compile:extra": "typechain \"./node_modules/@uniswap/v2-core/build/!(Combined-Json)*.json\" --target=ethers-v5 --outDir=typechain-extra",
-    "deploy": "yarn tsc && yarn hardhat run dist/scripts/deploy.js --network localhost"
+    "deploy": "yarn tsc && yarn hardhat run dist/scripts/deploy.js --network localhost",
+    "compile": "hardhat compile"
   },
   "repository": {
     "type": "git",

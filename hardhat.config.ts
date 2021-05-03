@@ -1,7 +1,8 @@
 import { HardhatUserConfig } from "hardhat/config";
-import "@nomiclabs/hardhat-waffle";
-import "@typechain/hardhat";
 import "hardhat-docgen";
+import '@typechain/hardhat'
+import '@nomiclabs/hardhat-ethers'
+import '@nomiclabs/hardhat-waffle'
 
 const config: HardhatUserConfig = {
     docgen: {
@@ -18,6 +19,12 @@ const config: HardhatUserConfig = {
                 version: "0.4.25",
             }
         ],
+    },
+    typechain: {
+        externalArtifacts: [
+            "./node_modules/@uniswap/v2-core/build/!(Combined-Json)*.json"
+        ],
+        outDir: "./typechain"
     }
 };
 
