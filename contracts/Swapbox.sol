@@ -1,4 +1,4 @@
-// Swap-box
+// Swapbox
 // Copyright (C) 2019  TrueLevel SA
 //
 // This program is free software: you can redistribute it and/or modify
@@ -20,10 +20,10 @@ import "./IERC20.sol";
 import "./UniswapExchangeInterface.sol";
 
 
-contract Atola {
+contract Swapbox {
     address payable internal owner;
-    IERC20 internal basetoken; // 0xb4272071ecadd69d933adcd19ca99fe80664fc08 for xCHF
-    address public baseexchange; // 0x8de0d002dc83478f479dc31f76cb0a8aa7ccea17 for xCHF
+    IERC20 internal baseToken; // 0xb4272071ecadd69d933adcd19ca99fe80664fc08 for xCHF
+    address public baseExchange; // 0x8de0d002dc83478f479dc31f76cb0a8aa7ccea17 for xCHF
     address[] public supportedTokensArr;
     address[] public machineAddressesArr;
 
@@ -45,13 +45,14 @@ contract Atola {
     mapping(address => uint256) internal customerBalance;
 
     /**
-     * @dev The Atola constructor sets the original `owner` of the contract to the sender
+     * @dev The Swapbox constructor sets the original `owner` of the contract
+      to the sender
      * account.
     */
     constructor(address _baseCurrency, address _baseExchange) public {
         owner = msg.sender;
-        basetoken = IERC20(_baseCurrency);
-        baseexchange = _baseExchange;
+        baseToken = IERC20(_baseCurrency);
+        baseExchange = _baseExchange;
     }
 
     /**
@@ -156,11 +157,11 @@ contract Atola {
         uint256 amountLessFee = _amountFiat - fee;
         uint256 deadline = block.timestamp + 120;
 
-        // approve exchange for Atola
-        basetoken.approve(baseexchange, amountLessFee);
+        // approve exchange for Swapbox
+        baseToken.approve(baseExchange, amountLessFee);
 
         //call uniswap
-        UniswapExchangeInterface ex = UniswapExchangeInterface(baseexchange);
+        UniswapExchangeInterface ex = UniswapExchangeInterface(baseExchange);
         uint256 ethBought = ex.tokenToEthTransferInput(
           amountLessFee,
           _tolerance,
@@ -201,7 +202,7 @@ contract Atola {
      * @param _amount Amount of of tokens to withdraw (in wei)
     */
     function withdrawBaseTokens(uint256 _amount) external onlyOwner {
-        basetoken.transfer(owner, _amount);
+        baseToken.transfer(owner, _amount);
     }
 
     /**
@@ -218,7 +219,7 @@ contract Atola {
      * @dev Allows owner to lookup token balance of contract
     */
     function tokenBalanceAmount() external view onlyOwner returns (uint256) {
-        return basetoken.balanceOf(owner);
+        return baseToken.balanceOf(owner);
     }
 
     /**
@@ -247,7 +248,7 @@ contract Atola {
     function ethToFiat(address payable _user, uint256 _amountFiat) public onlyBtm {
         uint256 fee = (_amountFiat * sellFee[msg.sender]) / 10000;
         //call uniswap
-        UniswapExchangeInterface ex = UniswapExchangeInterface(baseexchange);
+        UniswapExchangeInterface ex = UniswapExchangeInterface(baseExchange);
 
         uint256 ethSold = ex.ethToTokenTransferOutput.value(customerBalance[_user])(_amountFiat + fee, block.timestamp, _user);
         require(ethSold <= customerBalance[_user], "cannot sell more than the customer has");

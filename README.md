@@ -33,8 +33,8 @@ It will unlock 9 more accounts (so 10 in total) and prefund them with 1000 ETH e
 Documentation
 -------------
 
-Documentation for the [`Atola.sol`][atola-contract] smart contract is available at [doc/Atola.md][atola-doc].
-
+Documentation for the [`Swapbox.sol`][swapbox-contract] smart contract is 
+available at [doc/SwapBox.md][swapbox-doc].
 Compiling & Deployment
 ----------------------
 ```sh
@@ -50,8 +50,8 @@ TO-DO
 - Figure out how & where to set min exchange rate settings (do we really let the user set this ... frontrunners fucking things up for us :/)
 
 ### Second phase (need money‽)
-- Factory and FactoryRegistry to manage contract versioning and allow for some ui niceness for swap-box-admin
-- Nice admin interface for setup & configuration of machine in swap-box
+- Factory and FactoryRegistry to manage contract versioning and allow for some ui niceness for swapbox-admin
+- Nice admin interface for setup & configuration of machine in swapbox
 - Dynamic fee structure to try to stabilize cash balances between machines
 - Remittance feature (using backend such as coins.ph).  Will need to think about how to deal with kyc etc and varying user interfaces depending on remittance option chosen.
 
@@ -63,5 +63,5 @@ allow only selling of ether (otherwise users would need to call approve
 prior to using the machine; maybe have a solution for this).   Hopefully 777 (and its adoption sorts
 this out).
 
-[atola-contract]: ./contracts/Atola.sol
-[atola-doc]: ./doc/Atola.md
+[swapbox-contract]: ./contracts/Swapbox.sol
+[swapbox-doc]: ./doc/SwapBox.md

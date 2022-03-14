@@ -1,4 +1,4 @@
-// Swap-box
+// Swapbox
 // Copyright (C) 2019  TrueLevel SA
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
 
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers } from "ethers";
-import { CryptoFranc, Atola, CryptoFranc__factory, Atola__factory } from "../typechain";
+import { CryptoFranc, Swapbox, CryptoFranc__factory, Swapbox__factory } from "../typechain";
 import { UniswapV2Pair, ERC20, UniswapV2Factory__factory, ERC20__factory, UniswapV2Pair__factory } from "../typechain";
 
 
@@ -25,22 +25,22 @@ export class Deployment {
   uniswapExchange: UniswapV2Pair;
   tokenXCHF: CryptoFranc;
   tokenETH: ERC20;
-  atola: Atola;
+  swapbox: Swapbox;
 
   constructor(
     uniswapExchange: UniswapV2Pair,
     tokenXCHF: CryptoFranc,
     tokenETH: ERC20,
-    atola: Atola
+    swapbox: Swapbox
   ) {
     this.uniswapExchange = uniswapExchange;
     this.tokenXCHF = tokenXCHF;
     this.tokenETH = tokenETH;
-    this.atola = atola;
+    this.swapbox = swapbox;
   }
 
   public toString(): string {
-    return `pair:\t${this.uniswapExchange.address}\nXCHF:\t${this.tokenXCHF.address}\nWETH:\t${this.tokenETH.address}\natola:\t${this.atola.address}`;
+    return `pair:\t${this.uniswapExchange.address}\nXCHF:\t${this.tokenXCHF.address}\nWETH:\t${this.tokenETH.address}\nswapBox:\t${this.swapbox.address}`;
   }
 }
 
@@ -68,8 +68,7 @@ export async function deploy(deployer: SignerWithAddress): Promise<Deployment> {
   const pairAddress = receipt.events[0].args[2];
   const uniswapExchange = UniswapV2Pair__factory.connect(pairAddress, deployer);
 
-  // atola
-  const atola = await (new Atola__factory(deployer)).deploy(tokenXCHF.address, pairAddress);
+  const swapBox = await (new Swapbox__factory(deployer)).deploy(tokenXCHF.address, pairAddress);
 
-  return new Deployment(uniswapExchange, tokenXCHF, tokenETH, atola);
+  return new Deployment(uniswapExchange, tokenXCHF, tokenETH, swapBox);
 }

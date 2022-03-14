@@ -1,7 +1,7 @@
 {
   "name": "@truelevel/swapbox-contracts",
   "version": "0.1.0",
-  "description": "Smart contracts for the swapbox project.",
+  "description": "Solidity smart contracts for the SwapBox project.",
   "main": "hardhat.config.ts",
   "directories": {
     "test": "test"

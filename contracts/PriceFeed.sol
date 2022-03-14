@@ -1,4 +1,4 @@
-// Swap-box
+// Swapbox
 // Copyright (C) 2019  TrueLevel SA
 //
 // This program is free software: you can redistribute it and/or modify
@@ -27,27 +27,27 @@ interface Exchange {
   function getEthToTokenOutputPrice(uint256 tokens_bought) external view returns (uint256);
 }
 
-import "./Atola.sol";
+import "./Swapbox.sol";
 
 contract PriceFeed {
 
-  Atola atola;
+  Swapbox swapBox;
 
   /**
-   * @dev The PriceFeed constructor sets the address of the AtolaContract where
+   * @dev The PriceFeed constructor sets the address of the SwapBox where
    * we look up supportedTokens
   */
-  constructor(address payable _atolaContract) public {
-      atola = Atola(_atolaContract);
+  constructor(address payable _swapBoxAddress) public {
+      swapBox = Swapbox(_swapBoxAddress);
   }
 
   function getPrice(uint256 tokensSold, uint256 tokensBought) external view returns(uint256, uint256) {
-    Exchange exchange = Exchange(atola.baseexchange());
+    Exchange exchange = Exchange(swapBox.baseExchange());
     return (exchange.getTokenToEthInputPrice(tokensSold), exchange.getEthToTokenOutputPrice(tokensBought));
   }
 
   function getReserves() external view returns(uint256 tokenReserve, uint256 ethReserve) {
-    address exchangeAddress = atola.baseexchange();
+    address exchangeAddress = swapBox.baseExchange();
     Exchange exchange = Exchange(exchangeAddress);
     Token token = Token(exchange.tokenAddress());
     return (token.balanceOf(exchangeAddress), exchangeAddress.balance);

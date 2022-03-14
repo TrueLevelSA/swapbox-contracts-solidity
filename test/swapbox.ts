@@ -1,4 +1,4 @@
-// Swap-box
+// Swapbox
 // Copyright (C) 2019  TrueLevel SA
 //
 // This program is free software: you can redistribute it and/or modify
@@ -19,18 +19,18 @@ import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
 import { ethers } from "hardhat";
 import { deploy } from "../scripts/deploy_utils";
-import { Atola, CryptoFranc, ERC20, UniswapV2Pair } from '../typechain';
+import { Swapbox, CryptoFranc, ERC20, UniswapV2Pair } from '../typechain';
 
 chai.use(solidity);
 const { expect } = chai;
 
-describe('Atola', () => {
+describe('SwapBox', () => {
 
   let deployer: SignerWithAddress;
   let user: SignerWithAddress;
   let machine: SignerWithAddress;
 
-  let atola: Atola;
+  let swapbox: Swapbox;
   let uniswapExchange: UniswapV2Pair;
   let tokenXCHF: CryptoFranc;
   let tokenWETH: ERC20;
@@ -39,25 +39,25 @@ describe('Atola', () => {
     [deployer, user, machine] = await ethers.getSigners();
 
     const deployment = await deploy(deployer);
-    atola = deployment.atola;
+    swapbox = deployment.swapbox;
     uniswapExchange = deployment.uniswapExchange;
     tokenXCHF = deployment.tokenXCHF;
     tokenWETH = deployment.tokenETH;
   })
 
   it('should have a correct baseexchange address', async () => {
-    const baseExchange = await atola.baseexchange();
+    const baseExchange = await swapbox.baseExchange();
     expect(baseExchange).to.equal(uniswapExchange.address);
   });
 
   it('should have a correct token count', async () => {
-    const tokenCount = await atola.getTokenCount();
+    const tokenCount = await swapbox.getTokenCount();
     expect(tokenCount).to.equal(2);
   });
 
   it('should have correct tokens addresses', async () => {
-    const exchangeAddressXCHF = await atola.supportedTokensArr(0);
-    const exchangeAddressSCND = await atola.supportedTokensArr(1);
+    const exchangeAddressXCHF = await swapbox.supportedTokensArr(0);
+    const exchangeAddressSCND = await swapbox.supportedTokensArr(1);
 
     // expect()
     // assert.equal(exchangeAddressXCHF.toString(), config.UNISWAP_EXCHANGE, 'XCHF exchange address is wrong');
@@ -65,9 +65,9 @@ describe('Atola', () => {
   });
 
   it('machine address is allowed as a BTM', async () => {
-    await atola.addMachine(machine.address);
+    await swapbox.addMachine(machine.address);
 
-    const machineAddressPractical = await atola.machineAddressesArr(0);
+    const machineAddressPractical = await swapbox.machineAddressesArr(0);
     expect(machine.address).to.equal(machineAddressPractical);
   });
 
@@ -76,8 +76,8 @@ describe('Atola', () => {
     const tolerance = ethers.utils.formatEther(0.04); // tolerance should be 0 for buying
 
     // TxSend object
-    atola = atola.connect(machine.address);
-    const tx = await atola.fiatToEth(amount, tolerance, user.address);
+    swapbox = swapbox.connect(machine.address);
+    const tx = await swapbox.fiatToEth(amount, tolerance, user.address);
     const receipt = await tx.wait();
 
     expect(receipt.events).to.exist;
