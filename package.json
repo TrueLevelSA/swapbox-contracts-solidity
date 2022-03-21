@@ -1,15 +1,12 @@
 {
-  "name": "smart-contract",
+  "name": "@truelevel/swapbox-contracts",
   "version": "0.1.0",
   "description": "Smart contracts for the swapbox project.",
-  "main": "truffle-config.js",
+  "main": "hardhat.config.ts",
   "directories": {
     "test": "test"
   },
   "dependencies": {},
-  "resolutions": {
-    "solmd/solc": "0.5.8"
-  },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
@@ -24,29 +21,28 @@
     "bn.js": "^4.11.8",
     "chai": "^4.3.6",
     "cross-env": "^5.2.0",
-    "ethereum-waffle": "^3.3.0",
+    "ethereum-waffle": "^3.4.0",
     "ethers": "^5.0.0",
     "hardhat": "^2.1.2",
     "hardhat-docgen": "^1.1.1",
     "ts-generator": "^0.1.1",
     "ts-node": "^9.1.1",
     "typechain": "^7.0.0",
-    "typescript": "^4.2.4",
-    "yenv": "^2.1.0"
+    "typescript": "^4.2.4"
   },
   "scripts": {
-    "clean": "yarn hardhat clean && rm -rf ./typechain ./typechain-extra ./dist",
+    "clean": "yarn hardhat clean && rm -rf ./typechain ./dist",
     "deploy": "yarn tsc && yarn hardhat run dist/scripts/deploy.js --network localhost",
     "compile": "hardhat compile"
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@gitlab.com/atola/smart-contract.git"
+    "url": "git+ssh://git@gitlab.com/swapbox/contracts-solidity.git"
   },
   "author": "tshabs",
   "license": "AGPL-3.0-or-later",
   "bugs": {
-    "url": "https://gitlab.com/atola/smart-contract/issues"
+    "url": "https://gitlab.com/TrueLevel/swapbox/contracts-solidity/issues"
   },
-  "homepage": "https://gitlab.com/atola/smart-contract#readme"
+  "homepage": "https://swabpox.cash"
 }
