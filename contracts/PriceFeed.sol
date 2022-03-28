@@ -1,5 +1,8 @@
+// SPDX-License-Identifier: AGPL-3.0
+
 // Swapbox
-// Copyright (C) 2019  TrueLevel SA
+// Copyright (C) 2022  TrueLevel SA
+//
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -14,42 +17,39 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// need to figure out how to return the data (cant return array of struct which would be much more elegant than returning an array where for example the first element is token, second is input balance, third is output balance and then next token etc :/)
-pragma solidity ^0.5.8;
+pragma solidity ^0.8.9;
 
 interface Token {
-  function balanceOf(address who) external view returns (uint256);
+    function balanceOf(address who) external view returns (uint256);
 }
 
-interface Exchange {
-  function tokenAddress() external view returns (address token);
-  function getTokenToEthInputPrice(uint256 tokens_sold) external view returns (uint256);
-  function getEthToTokenOutputPrice(uint256 tokens_bought) external view returns (uint256);
+interface Exchange {function tokenAddress() external view returns (address token);
+    function getTokenToEthInputPrice(uint256 tokens_sold) external view returns (uint256);
+    function getEthToTokenOutputPrice(uint256 tokens_bought) external view returns (uint256);
 }
 
 import "./Swapbox.sol";
 
 contract PriceFeed {
+    Swapbox swapbox;
 
-  Swapbox swapBox;
+    /**
+     * @dev The PriceFeed constructor sets the address of the SwapBox where
+     * we look up supportedTokens
+     */
+    constructor(address payable swapboxAddress) {
+        swapbox = Swapbox(swapboxAddress);
+    }
 
-  /**
-   * @dev The PriceFeed constructor sets the address of the SwapBox where
-   * we look up supportedTokens
-  */
-  constructor(address payable _swapBoxAddress) public {
-      swapBox = Swapbox(_swapBoxAddress);
-  }
+    function getPrice(uint256 tokensSold, uint256 tokensBought) external view returns(uint256, uint256) {
+        Exchange exchange = Exchange(swapbox.baseExchange());
+        return (exchange.getTokenToEthInputPrice(tokensSold), exchange.getEthToTokenOutputPrice(tokensBought));
+    }
 
-  function getPrice(uint256 tokensSold, uint256 tokensBought) external view returns(uint256, uint256) {
-    Exchange exchange = Exchange(swapBox.baseExchange());
-    return (exchange.getTokenToEthInputPrice(tokensSold), exchange.getEthToTokenOutputPrice(tokensBought));
-  }
-
-  function getReserves() external view returns(uint256 tokenReserve, uint256 ethReserve) {
-    address exchangeAddress = swapBox.baseExchange();
-    Exchange exchange = Exchange(exchangeAddress);
-    Token token = Token(exchange.tokenAddress());
-    return (token.balanceOf(exchangeAddress), exchangeAddress.balance);
-  }
+    function getReserves() external view returns(uint256 tokenReserve, uint256 ethReserve) {
+        address exchangeAddress = swapbox.baseExchange();
+        Exchange exchange = Exchange(exchangeAddress);
+        Token token = Token(exchange.tokenAddress());
+        return (token.balanceOf(exchangeAddress), exchangeAddress.balance);
+    }
 }
