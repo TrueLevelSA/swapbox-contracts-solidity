@@ -33,15 +33,16 @@ contract Swapbox is Ownable {
         uint256 buy;
         uint256 sell;
     }
+
     uint256 public constant MAX_FEE = 10000;
 
     mapping(address => bool) private _authorizedMachines;
     mapping(address => Fee) private _machineFees;
 
-    EnumerableSet.AddressSet private supportedTokens;
+    EnumerableSet.AddressSet private _supportedTokens;
 
-    IERC20 internal baseToken; // 0xb4272071ecadd69d933adcd19ca99fe80664fc08 for xCHF
-    address public baseExchange; // 0x8de0d002dc83478f479dc31f76cb0a8aa7ccea17 for xCHF
+    IERC20 internal baseToken;
+    address public baseExchange;
 
 
     //TODO: check which fields we need in the event log and whether we can have addresses as indexed
@@ -57,9 +58,9 @@ contract Swapbox is Ownable {
     /**
      * @dev The Swapbox constructor.
     */
-    constructor(address _baseCurrency, address _baseExchange) {
-        baseToken = IERC20(_baseCurrency);
-        baseExchange = _baseExchange;
+    constructor(address baseCurrency_, address baseExchange_) {
+        baseToken = IERC20(baseCurrency_);
+        baseExchange = baseExchange_;
     }
 
     /**
@@ -70,8 +71,8 @@ contract Swapbox is Ownable {
         _;
     }
 
-    function getTokenCount() public view returns(uint count) {
-        return supportedTokens.length();
+    function getTokenCount() public view returns (uint256 count) {
+        return _supportedTokens.length();
     }
 
     /**
@@ -125,30 +126,45 @@ contract Swapbox is Ownable {
      * @dev Allows the owner to add a trusted token address
      * @param tokenAddress The address of the token contract (warning: make sure it's compliant)
     */
-    function addToken(address tokenAddress) external onlyOwner {
-      supportedTokens.add(tokenAddress);
+    function addToken(address tokenAddress) external onlyOwner returns (bool) {
+        return _supportedTokens.add(tokenAddress);
     }
 
     /**
      * @dev Allows the owner to remove a supported token
      * @param tokenAddress The address of the token contract
     */
-    function removeToken(address tokenAddress) external onlyOwner {
-        supportedTokens.remove(tokenAddress);
+    function removeToken(address tokenAddress) external onlyOwner returns (bool) {
+        return _supportedTokens.remove(tokenAddress);
+    }
+
+    /**
+     * @dev Return the supported token set in an array.
+     *
+     * - Elements are enumerated in O(n). No guarantees are made on the ordering.
+     *
+     * WARNING: This operation will copy the entire storage to memory, which can
+     * be quite expensive. This is designed to stay be used by view accessors that are queried without any gas fees.
+     Developers should keep in mind that
+     * this function has an unbounded cost, and using it as part of a state-changing function may render the function
+     * uncallable if the set grows to a point where copying to memory consumes too much gas to fit in a block.
+     */
+    function supportedTokensList() external view returns (address[] memory) {
+        return _supportedTokens.values();
     }
 
     /**
      * @dev Allows the machine to submit a fiat -> eth order
-     * @param _amountFiat Amount of fiat machine reports to have recieved (18 decimal places)
-     * @param _userAddress Users crypto address
+     * @param amountFiat Amount of fiat machine reports to have recieved (18 decimal places)
+     * @param userAddress Users crypto address
     */
     function fiatToEth(
-        uint256 _amountFiat,
-        uint256 _tolerance,
-        address _userAddress
+        uint256 amountFiat,
+        uint256 tolerance,
+        address userAddress
     ) external onlyAuthorizedMachine {
-        uint256 fee = (_amountFiat * _machineFees[msg.sender].buy) / MAX_FEE;
-        uint256 amountLessFee = _amountFiat - fee;
+        uint256 fee = (amountFiat * _machineFees[msg.sender].buy) / MAX_FEE;
+        uint256 amountLessFee = amountFiat - fee;
         uint256 deadline = block.timestamp + 120;
 
         // approve exchange for Swapbox
@@ -157,13 +173,13 @@ contract Swapbox is Ownable {
         //call uniswap
         UniswapExchangeInterface ex = UniswapExchangeInterface(baseExchange);
         uint256 ethBought = ex.tokenToEthTransferInput(
-          amountLessFee,
-          _tolerance,
-          deadline,
-          _userAddress
+            amountLessFee,
+            tolerance,
+            deadline,
+            userAddress
         );
 
-        emit CryptoPurchase(_userAddress, _amountFiat, ethBought);
+        emit CryptoPurchase(userAddress, amountFiat, ethBought);
     }
 
 
@@ -224,46 +240,46 @@ contract Swapbox is Ownable {
 
     /**
      * @dev Allows customer to claim refund if order hasn't been processed (TO-DO add a delay to this to avoid double spend race)
-     * @param _amount Refund amount
+     * @param amount Refund amount
     */
-    function refund(uint256 _amount) public {
-        require(customerBalance[msg.sender] > _amount, "Swapbox: Cannot refund more than the balance");
-        customerBalance[msg.sender] -= _amount;
-        payable(msg.sender).transfer(_amount);
-        emit Refund(msg.sender, _amount);
+    function refund(uint256 amount) public {
+        require(customerBalance[msg.sender] > amount, "Swapbox: Cannot refund more than the balance");
+        customerBalance[msg.sender] -= amount;
+        payable(msg.sender).transfer(amount);
+        emit Refund(msg.sender, amount);
     }
 
     /**
      * @dev Allows customer to sell eth (needs to have already sent eth to the contract).  Called by the machine.
-     * @param _user Customer address
-     * @param _amountFiat Amount to process
+     * @param user Customer address
+     * @param amountFiat Amount to process
     */
-    function ethToFiat(address payable _user, uint256 _amountFiat) public onlyAuthorizedMachine {
-        uint256 fee = (_amountFiat * _machineFees[msg.sender].sell) / MAX_FEE;
+    function ethToFiat(address payable user, uint256 amountFiat) public onlyAuthorizedMachine {
+        uint256 fee = (amountFiat * _machineFees[msg.sender].sell) / MAX_FEE;
         //call uniswap
         UniswapExchangeInterface ex = UniswapExchangeInterface(baseExchange);
 
-        uint256 ethSold = ex.ethToTokenTransferOutput{value: customerBalance[_user]}(
-            _amountFiat + fee,
+        uint256 ethSold = ex.ethToTokenTransferOutput{value : customerBalance[user]}(
+            amountFiat + fee,
             block.timestamp,
-            _user
+            user
         );
 
-        require(ethSold <= customerBalance[_user], "Swapbox: Cannot sell more than the customer has");
-        customerBalance[_user] -= ethSold;
+        require(ethSold <= customerBalance[user], "Swapbox: Cannot sell more than the customer has");
+        customerBalance[user] -= ethSold;
 
         // Send change to the user (the alternative is for the change to be processed on a seperate contract call :/)
-        _user.transfer(customerBalance[_user]);
+        user.transfer(customerBalance[user]);
 
-        emit CryptoSale(_user, ethSold, _amountFiat);
+        emit CryptoSale(user, ethSold, amountFiat);
     }
 
     /**
      * @dev Shows the amount of ETH from customer pending sale
-     * @param _user Customer crypto address
+     * @param user Customer crypto address
     */
-    function amountForAddress(address _user) public view onlyAuthorizedMachine returns (uint256) {
-        return (customerBalance[_user]);
+    function amountForAddress(address user) public view onlyAuthorizedMachine returns (uint256) {
+        return (customerBalance[user]);
     }
 
     /**

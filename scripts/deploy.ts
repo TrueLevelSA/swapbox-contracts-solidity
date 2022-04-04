@@ -15,11 +15,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { ethers } from "hardhat";
-import { deploy } from "./deploy_utils";
+import { deployUniswapEnv } from "./deploy_utils";
 
 async function main() {
   const [deployer] = await ethers.getSigners()
-  const deployment = await deploy(deployer);
+  const deployment = await deployUniswapEnv(deployer);
   console.log("" + deployment);
 }
 

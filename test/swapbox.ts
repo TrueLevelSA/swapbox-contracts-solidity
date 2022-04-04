@@ -14,78 +14,123 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
 import chai from 'chai';
-import { solidity } from 'ethereum-waffle';
-import { ethers } from "hardhat";
-import { deploy } from "../scripts/deploy_utils";
-import { Swapbox, CryptoFranc, ERC20, UniswapV2Pair } from '../typechain';
+import {solidity} from 'ethereum-waffle';
+import {ethers} from "hardhat";
+import {deploySwapbox, deployToken, deployUniswapEnv} from "../scripts/deploy_utils";
+import {CryptoFranc, ERC20, Swapbox, UniswapV2Pair} from '../typechain';
+import {BigNumber} from "ethers";
 
 chai.use(solidity);
-const { expect } = chai;
+const {expect} = chai;
 
 describe('SwapBox', () => {
+    let deployer: SignerWithAddress;
+    let user: SignerWithAddress;
+    let machine: SignerWithAddress;
 
-  let deployer: SignerWithAddress;
-  let user: SignerWithAddress;
-  let machine: SignerWithAddress;
+    let swapbox: Swapbox;
+    let uniswapExchange: UniswapV2Pair;
+    let tokenXCHF: CryptoFranc;
+    let tokenWETH: ERC20;
 
-  let swapbox: Swapbox;
-  let uniswapExchange: UniswapV2Pair;
-  let tokenXCHF: CryptoFranc;
-  let tokenWETH: ERC20;
+    beforeEach(async () => {
+        [deployer, user, machine] = await ethers.getSigners();
 
-  beforeEach(async () => {
-    [deployer, user, machine] = await ethers.getSigners();
+        const deployment = await deployUniswapEnv(deployer);
+        uniswapExchange = deployment.exchange;
+        tokenXCHF = deployment.tokenXCHF;
+        tokenWETH = deployment.tokenETH;
 
-    const deployment = await deploy(deployer);
-    swapbox = deployment.swapbox;
-    uniswapExchange = deployment.uniswapExchange;
-    tokenXCHF = deployment.tokenXCHF;
-    tokenWETH = deployment.tokenETH;
-  })
+        swapbox = await deploySwapbox(deployer, deployment);
+    })
 
-  it('should have a correct baseexchange address', async () => {
-    const baseExchange = await swapbox.baseExchange();
-    expect(baseExchange).to.equal(uniswapExchange.address);
-  });
+    it('should correctly add a new supported token', async () => {
+        const monero = await deployToken(deployer, "Monero", "XMR");
 
-  it('should have a correct token count', async () => {
-    const tokenCount = await swapbox.getTokenCount();
-    expect(tokenCount).to.equal(2);
-  });
+        // static call should confirm it will work
+        const added = await swapbox.callStatic.addToken(monero.address);
+        expect(added).to.be.true;
 
-  it('should have correct tokens addresses', async () => {
-    const exchangeAddressXCHF = await swapbox.supportedTokensArr(0);
-    const exchangeAddressSCND = await swapbox.supportedTokensArr(1);
+        await swapbox.addToken(monero.address);
+        const tokenCount = await swapbox.getTokenCount();
+        expect(tokenCount).to.equal(1);
 
-    // expect()
-    // assert.equal(exchangeAddressXCHF.toString(), config.UNISWAP_EXCHANGE, 'XCHF exchange address is wrong');
-    // assert.equal(exchangeAddressSCND.toString(), config.UNISWAP_EXCHANGE_SCND, 'SCND exchange address is wrong');
-  });
+        const tokens = await swapbox.supportedTokensList();
+        expect(tokens).to.have.length(1);
+        expect(tokens.at(0)).to.equal(monero.address);
+    });
 
-  it('machine address is allowed as a BTM', async () => {
-    await swapbox.addMachine(machine.address);
+    it('should remove an existing supported token', async () => {
+        const monero = await deployToken(deployer, "Monero", "XMR");
+        await swapbox.addToken(monero.address);
 
-    const machineAddressPractical = await swapbox.machineAddressesArr(0);
-    expect(machine.address).to.equal(machineAddressPractical);
-  });
+        // static call should confirm it will work
+        const removed = await swapbox.callStatic.removeToken(monero.address);
+        expect(removed).to.be.true;
 
-  it('throws an CrptoPurchase event after a fiatToEth order', async () => {
-    const amount = ethers.utils.formatEther(10);
-    const tolerance = ethers.utils.formatEther(0.04); // tolerance should be 0 for buying
+        await swapbox.removeToken(monero.address);
+        const tokenCount = await swapbox.getTokenCount();
+        expect(tokenCount).to.equal(0);
+    });
 
-    // TxSend object
-    swapbox = swapbox.connect(machine.address);
-    const tx = await swapbox.fiatToEth(amount, tolerance, user.address);
-    const receipt = await tx.wait();
+    it('should not remove an non-existing token', async () => {
+        const monero = await deployToken(deployer, "Monero", "XMR");
+        await swapbox.addToken(monero.address);
+        const removed = await swapbox.callStatic.removeToken(ethers.constants.AddressZero)
+        expect(removed).to.be.false;
 
-    expect(receipt.events).to.exist;
-    expect(receipt.events).to.have.lengthOf(1);
-    const event = receipt.events![0];
-    expect(event.args).to.exist;
-    expect(event.event).to.equal("CryptoPurchase")
-  });
+        await swapbox.removeToken(ethers.constants.AddressZero);
+        const tokenCount = await swapbox.getTokenCount();
+        expect(tokenCount).to.equal(1);
+    });
 
+    it('emit a `MachineAuthorized` event when authorizing a machine', async () => {
+        await expect(swapbox.authorizeMachine(machine.address))
+            .to.emit(swapbox, 'MachineAuthorized')
+            .withArgs(machine.address);
+    });
 
+    it('authorize a machine', async () => {
+        await swapbox.authorizeMachine(machine.address);
+        const isAuthorized = await swapbox.isAuthorized(machine.address);
+        expect(isAuthorized).to.be.true;
+    });
+
+    it('should buy ETH through a fiatToEth order', async () => {
+        const mintAmount = ethers.utils.parseEther("50");
+        const userAmountFiat = ethers.utils.parseEther("10");
+        const buyPriceTolerance = ethers.utils.parseEther("0.04");
+
+        await tokenXCHF.mint(machine.address, mintAmount);
+        await swapbox.authorizeMachine(machine.address);
+
+        swapbox = swapbox.connect(machine.address);
+        const a = await swapbox.callStatic.fiatToEth(
+            userAmountFiat,
+            buyPriceTolerance,
+            user.address,
+
+        );
+        expect(a).to.be.true;
+
+        // FIX:
+        expect(await swapbox.fiatToEth(userAmountFiat, buyPriceTolerance, user.address))
+            .to.changeEtherBalance(user.address, userAmountFiat);
+
+    });
+
+    it('emit a `CryptoPurchase` event after a fiatToEth order', async () => {
+        await tokenXCHF.mint(machine.address, ethers.utils.parseEther("50"));
+        await swapbox.authorizeMachine(machine.address);
+
+        const amount = ethers.utils.parseEther("10");
+        const tolerance = ethers.utils.parseEther("0.04");
+        swapbox = swapbox.connect(machine.address);
+
+        await expect(swapbox.fiatToEth(amount, tolerance, user.address))
+            .to.emit(swapbox, 'CryptoPurchase')
+            .withArgs(user.address, amount)
+    });
 });

@@ -22,7 +22,8 @@ const config: HardhatUserConfig = {
     },
     typechain: {
         externalArtifacts: [
-            "./node_modules/@uniswap/v2-core/build/!(Combined-Json)*.json"
+            "./node_modules/@uniswap/v2-core/build/!(Combined-Json)*.json",
+            "./node_modules/@openzeppelin/contracts/build/contracts/ERC20.json"
         ],
         outDir: "./typechain"
     }
