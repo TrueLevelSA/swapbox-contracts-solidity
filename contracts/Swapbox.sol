@@ -17,7 +17,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-pragma solidity 0.8.9;
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -28,22 +28,37 @@ import "./UniswapExchangeInterface.sol";
 contract Swapbox is Ownable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
+    // Represents a fee.
     struct Fee {
         // divisor is hardcoded to 100. A fee of 120 is 1.2% fee.
         uint256 buy;
         uint256 sell;
     }
 
+    // Deadline timeout (s.) for txs.
+    uint256 public constant DEADLINE_TIMEOUT = 120;
+
+    //TODO: improve fees
+    // Maximum fees, represents 100% fees.
     uint256 public constant MAX_FEE = 10000;
 
+    // Set of authorized machines.
     mapping(address => bool) private _authorizedMachines;
+
+    // Machine fees, each machine can have its proper fees.
     mapping(address => Fee) private _machineFees;
 
+    // Set of supported tokens.
     EnumerableSet.AddressSet private _supportedTokens;
 
+    // Backing token, representing the fiat input in the physical machine.
     IERC20 internal baseToken;
+
+    // Base exchange.
     address public baseExchange;
 
+    // Customer balances.
+    mapping(address => uint256) internal customerBalance;
 
     //TODO: check which fields we need in the event log and whether we can have addresses as indexed
     event MachineAuthorized(address machineAddress);
@@ -53,11 +68,12 @@ contract Swapbox is Ownable {
     event Refund(address customerAddress, uint256 cryptoAmount);
     event EthReceived(address customerAddress, uint256 cryptoAmount);
 
-    mapping(address => uint256) internal customerBalance;
 
     /**
-     * @dev The Swapbox constructor.
-    */
+     * @dev Initializes the contract setting the base token.
+     *
+     * @param baseCurrency_ Address of the backing token representing the fiat input in the physical Swapbox.
+     */
     constructor(address baseCurrency_, address baseExchange_) {
         baseToken = IERC20(baseCurrency_);
         baseExchange = baseExchange_;
@@ -67,7 +83,7 @@ contract Swapbox is Ownable {
      * @dev Modifier that revert if the sender is not an authorized machine.
      */
     modifier onlyAuthorizedMachine() {
-        require(isAuthorized(msg.sender), "Swapbox: Machine is not authorized");
+        require(isAuthorized(msg.sender), "Swapbox: machine is not authorized");
         _;
     }
 
@@ -76,7 +92,7 @@ contract Swapbox is Ownable {
     }
 
     /**
-     * @dev Returns `true` if `machineAddress` is authorized.
+     * @dev Returns `true` if `machineAddress` is authorized for transactions.
      * @param machineAddress The address of the machine to authorize.
      */
     function isAuthorized(address machineAddress) public view returns (bool) {
@@ -100,7 +116,7 @@ contract Swapbox is Ownable {
      */
     function revokeMachine(address machineAddress) external onlyOwner {
         if (isAuthorized(machineAddress)) {
-            _authorizedMachines[machineAddress] = false;
+            delete _authorizedMachines[machineAddress];
             emit MachineRevoked(machineAddress);
         }
     }
@@ -165,7 +181,7 @@ contract Swapbox is Ownable {
     ) external onlyAuthorizedMachine {
         uint256 fee = (amountFiat * _machineFees[msg.sender].buy) / MAX_FEE;
         uint256 amountLessFee = amountFiat - fee;
-        uint256 deadline = block.timestamp + 120;
+        uint256 deadline = block.timestamp + DEADLINE_TIMEOUT;
 
         // approve exchange for Swapbox
         baseToken.approve(baseExchange, amountLessFee);
@@ -243,7 +259,7 @@ contract Swapbox is Ownable {
      * @param amount Refund amount
     */
     function refund(uint256 amount) public {
-        require(customerBalance[msg.sender] > amount, "Swapbox: Cannot refund more than the balance");
+        require(customerBalance[msg.sender] > amount, "Swapbox: cannot refund more than the balance");
         customerBalance[msg.sender] -= amount;
         payable(msg.sender).transfer(amount);
         emit Refund(msg.sender, amount);
@@ -265,7 +281,7 @@ contract Swapbox is Ownable {
             user
         );
 
-        require(ethSold <= customerBalance[user], "Swapbox: Cannot sell more than the customer has");
+        require(ethSold <= customerBalance[user], "Swapbox: cannot sell more than the customer has");
         customerBalance[user] -= ethSold;
 
         // Send change to the user (the alternative is for the change to be processed on a seperate contract call :/)

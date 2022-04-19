@@ -43,12 +43,12 @@ describe('Deploy setup', () => {
     it('should deployed swapbox', async () => {
         const d = await deployUniswapEnv(deployer);
         swapbox = await deploySwapbox(deployer, d);
-        expect(swapbox.address).not.to.be.empty;
+        expect(swapbox.address).to.not.be.empty;
     });
 
     it('should deploy an ERC20 token', async () => {
         const token = await deployToken(deployer, "Test Token", "TTK");
-        expect(token.address).not.to.be.empty;
+        expect(token.address).to.not.be.empty;
         expect(await token.name()).to.equal("Test Token");
         expect(await token.symbol()).to.equal("TTK");
         expect(await token.totalSupply()).to.equal(0);
