@@ -72,7 +72,7 @@ contract SwapboxUniswapV2 is Swapbox {
             deadline
         );
 
-        emit CryptoPurchase(to, amounts[0], amounts[1]);
+        emit EtherBought(to, amounts[0], amounts[1]);
     }
 
     function _sellEth(uint256 amountFiat, uint256 minValue, address to) internal override {
@@ -86,6 +86,6 @@ contract SwapboxUniswapV2 is Swapbox {
         //call uniswap
         _pair.swap(amountFiat, minValue, to, new bytes(0));
 
-        emit CryptoSale(to, amountFiat, minValue);
+        emit EtherSold(to, amountFiat, minValue);
     }
 }

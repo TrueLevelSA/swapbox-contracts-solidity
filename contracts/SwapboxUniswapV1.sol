@@ -48,7 +48,7 @@ contract SwapboxUniswapV1 is Swapbox {
             to
         );
 
-        emit CryptoPurchase(to, amountFiat, ethBought);
+        emit EtherBought(to, amountFiat, ethBought);
     }
 
     function _sellEth(uint256 amountFiat, uint256 minValue, address to) internal override {
@@ -66,6 +66,6 @@ contract SwapboxUniswapV1 is Swapbox {
             to
         );
 
-        emit CryptoSale(to, amountFiat, ethBought);
+        emit EtherSold(to, amountFiat, ethBought);
     }
 }

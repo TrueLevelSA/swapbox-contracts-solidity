@@ -55,13 +55,12 @@ abstract contract Swapbox is Ownable {
     // Set of supported tokens.
     EnumerableSet.AddressSet private _supportedTokens;
 
-    //TODO: #23 check which fields we need in the event log and whether we can have addresses as indexed
-    event MachineAuthorized(address machineAddress);
-    event MachineRevoked(address machineAddress);
-    event CryptoPurchase(address customerAddress, uint256 fiatAmount, uint256 cryptoAmount);
-    event CryptoSale(address customerAddress, uint256 cryptoAmount, uint256 fiatAmount);
-    event Refund(address customerAddress, uint256 cryptoAmount);
-    event EthReceived(address customerAddress, uint256 cryptoAmount);
+    event MachineAuthorized(address indexed machineAddress);
+    event MachineRevoked(address indexed machineAddress);
+    event EtherBought(address indexed customerAddress, uint256 fiatAmount, uint256 cryptoAmount);
+    event EtherSold(address indexed customerAddress, uint256 cryptoAmount, uint256 fiatAmount);
+    event EtherRefunded(address indexed customerAddress, uint256 cryptoAmount);
+    event EtherReceived(address indexed customerAddress, uint256 cryptoAmount);
 
     /**
      * @dev Modifier that revert if the sender is not an authorized machine.
@@ -87,7 +86,7 @@ abstract contract Swapbox is Ownable {
      */
     receive() external payable {
         customerBalance[msg.sender] += msg.value;
-        emit EthReceived(msg.sender, msg.value);
+        emit EtherReceived(msg.sender, msg.value);
     }
 
     /**
@@ -269,7 +268,7 @@ abstract contract Swapbox is Ownable {
         require(customerBalance[msg.sender] > amount, "Swapbox: cannot refund more than the balance");
         customerBalance[msg.sender] -= amount;
         payable(msg.sender).transfer(amount);
-        emit Refund(msg.sender, amount);
+        emit EtherRefunded(msg.sender, amount);
     }
 
     /**
