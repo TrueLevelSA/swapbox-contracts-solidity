@@ -41,15 +41,15 @@ contract PriceFeed {
         swapbox = Swapbox(swapboxAddress);
     }
 
-    function getPrice(uint256 tokensSold, uint256 tokensBought) external view returns(uint256, uint256) {
-        Exchange exchange = Exchange(swapbox.baseExchange());
-        return (exchange.getTokenToEthInputPrice(tokensSold), exchange.getEthToTokenOutputPrice(tokensBought));
-    }
-
-    function getReserves() external view returns(uint256 tokenReserve, uint256 ethReserve) {
-        address exchangeAddress = swapbox.baseExchange();
-        Exchange exchange = Exchange(exchangeAddress);
-        Token token = Token(exchange.tokenAddress());
-        return (token.balanceOf(exchangeAddress), exchangeAddress.balance);
-    }
+//    function getPrice(uint256 tokensSold, uint256 tokensBought) external view returns(uint256, uint256) {
+//        Exchange exchange = Exchange(swapbox.baseExchange());
+//        return (exchange.getTokenToEthInputPrice(tokensSold), exchange.getEthToTokenOutputPrice(tokensBought));
+//    }
+//
+//    function getReserves() external view returns(uint256 tokenReserve, uint256 ethReserve) {
+//        address exchangeAddress = swapbox.baseExchange();
+//        Exchange exchange = Exchange(exchangeAddress);
+//        Token token = Token(exchange.tokenAddress());
+//        return (token.balanceOf(exchangeAddress), exchangeAddress.balance);
+//    }
 }

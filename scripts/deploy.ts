@@ -1,5 +1,5 @@
 // Swapbox
-// Copyright (C) 2019  TrueLevel SA
+// Copyright (C) 2022  TrueLevel SA
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -14,18 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import { ethers } from "hardhat";
-import { deployUniswapEnv } from "./deploy_utils";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
+import {ERC20PresetMinterPauser} from "../typechain/ERC20PresetMinterPauser";
+import {ERC20PresetMinterPauser__factory} from "../typechain/factories/ERC20PresetMinterPauser__factory";
+import {tracer} from "hardhat";
 
-async function main() {
-  const [deployer] = await ethers.getSigners()
-  const deployment = await deployUniswapEnv(deployer);
-  console.log("" + deployment);
+
+export async function deployMintableToken(
+    deployer: SignerWithAddress,
+    name: string,
+    symbol: string
+): Promise<ERC20PresetMinterPauser> {
+    const token = await (new ERC20PresetMinterPauser__factory(deployer)).deploy(name, symbol)
+    tracer.nameTags[token.address] = name;
+    return token;
 }
-
-main()
-  .then(() => process.exit(0))
-  .catch(error => {
-    console.error(error);
-    process.exit(1);
-  });
