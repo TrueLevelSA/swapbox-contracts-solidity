@@ -97,16 +97,27 @@ describe('SwapBox', async () => {
         expect(tokenCount).to.equal(1);
     });
 
-    it('emit a `MachineAuthorized` event when authorizing a machine', async () => {
+    it('should emit a `AuthorizeMachine` event when authorizing a machine', async () => {
         await expect(swapbox.authorizeMachine(machine.address))
             .to.emit(swapbox, 'MachineAuthorized')
             .withArgs(machine.address);
     });
 
-    it('authorize a machine', async () => {
+    it('should emit a `RevokeMachine` event when revoking a machine', async () => {
         await swapbox.authorizeMachine(machine.address);
-        const isAuthorized = await swapbox.isAuthorized(machine.address);
-        expect(isAuthorized).to.be.true;
+
+        await expect(swapbox.revokeMachine(machine.address))
+            .to.emit(swapbox, 'MachineRevoked')
+            .withArgs(machine.address);
+    });
+
+    it('should correctly return a machine authorization status', async () => {
+        await swapbox.authorizeMachine(machine.address);
+        const isAuthorizedTrue = await swapbox.isAuthorized(machine.address);
+        expect(isAuthorizedTrue).to.be.true;
+
+        const isAuthorizedFalse = await swapbox.isAuthorized(ethers.constants.AddressZero);
+        expect(isAuthorizedFalse).to.be.false;
     });
 
     it('should buy ETH through a buyEth order', async () => {
@@ -139,7 +150,7 @@ describe('SwapBox', async () => {
         expect(tokenBalanceDecrease).to.eq(amountIn);
     });
 
-    it('emit a `CryptoPurchase` event after a fiatToEth order', async () => {
+    it('emit a `BuyEther` event after a buyEth order', async () => {
         const amountIn = ethers.utils.parseEther("10");
         const amountOutMin = ethers.utils.parseEther("0.0049");
 
@@ -155,7 +166,7 @@ describe('SwapBox', async () => {
                     gasLimit: 250000
                 }
             )
-        ).to.emit(swapbox, 'CryptoPurchase');
+        ).to.emit(swapbox, 'EtherBought');
         // can't use .withArgs because we can't know deterministically the amount out.
     });
 
