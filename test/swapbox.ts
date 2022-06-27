@@ -97,13 +97,13 @@ describe('SwapBox', async () => {
         expect(tokenCount).to.equal(1);
     });
 
-    it('should emit a `AuthorizeMachine` event when authorizing a machine', async () => {
+    it('should emit a `MachineAuthorized` event when authorizing a machine', async () => {
         await expect(swapbox.authorizeMachine(machine.address))
             .to.emit(swapbox, 'MachineAuthorized')
             .withArgs(machine.address);
     });
 
-    it('should emit a `RevokeMachine` event when revoking a machine', async () => {
+    it('should emit a `MachineRevoked` event when revoking a machine', async () => {
         await swapbox.authorizeMachine(machine.address);
 
         await expect(swapbox.revokeMachine(machine.address))
@@ -159,7 +159,7 @@ describe('SwapBox', async () => {
         expect(tokenBalanceDecrease).to.eq(amountIn);
     });
 
-    it('emits a `BuyEther` event after a buyEth order', async () => {
+    it('emits a `EtherBought` event after a buyEth order', async () => {
         const amountIn = ethers.utils.parseEther("10");
         const amountOutMin = ethers.utils.parseEther("0.0049");
 
@@ -182,7 +182,7 @@ describe('SwapBox', async () => {
 
     it('transfers the full approved amount');
 
-    it('emits a `SellEther` event after a sellEth order', async () => {
+    it('emits a `EtherSold` event after a sellEth order', async () => {
         const amountEth = ethers.utils.parseEther("0.22");
         const amountOut = ethers.utils.parseEther("400");
         await user.sendTransaction({to: swapbox.address, value: amountEth});
