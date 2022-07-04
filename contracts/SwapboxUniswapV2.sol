@@ -48,22 +48,25 @@ contract SwapboxUniswapV2 is Swapbox {
     }
 
     /**
-     * @dev Send a swap order to swapbox default pair.
+     * @dev Swap an exact amount of its own base tokens for ETH, which will be
+     * transferred to the user.
      *
-     * @param   amountIn        Cash in.
-     * @param   amountOutMin    Min amount user will receive.
-     * @param   to              Address that will receive ETH.
+     * @param   amountIn        Cash in
+     * @param   amountOutMin    Min amount user should receive, revert if not able to do so
+     * @param   to              Address that will receive ETH
      */
     function _buyEth(uint256 amountIn, uint256 amountOutMin, address to) internal override {
         uint256 fee = (amountIn * _machineFees[msg.sender].buy) / MAX_FEE;
         uint256 amountInLessFee = amountIn - fee;
         uint256 deadline = block.timestamp + 120;
 
-        require(_baseToken.approve(address(_router), amountInLessFee), 'SwapboxUniswapV2: approve failed.');
+        require(_baseToken.approve(address(_router), amountInLessFee), "SwapboxUniswapV2: approve failed.");
 
+        // Path: Base Token -> ETH
         address[] memory path = new address[](2);
         path[0] = address(_baseToken);
         path[1] = WETH;
+
         uint[] memory amounts = _router.swapExactTokensForETH(
             amountInLessFee,
             amountOutMin,
@@ -75,17 +78,44 @@ contract SwapboxUniswapV2 is Swapbox {
         emit EtherBought(to, amounts[0], amounts[1]);
     }
 
-    function _sellEth(uint256 amountFiat, uint256 minValue, address to) internal override {
-        uint256 fee = (amountFiat * _machineFees[msg.sender].sell) / MAX_FEE;
-        uint256 amountLessFee = amountFiat - fee;
-//        uint256 deadline = block.timestamp + 120;
+    /**
+     * @dev Swap ETH for an exact amount of base tokens. User must have sent the
+     * ETH in advance for this to work. User will be refunded all its remaining
+     * balance.
+     *
+     * @param   amountInEth     Amount of ETH to be swapped.
+     * @param   amountOut       Amount of base tokens to receive.
+     * @param   to              Address that will be refunded if needed.
+     */
+    function _sellEth(uint256 amountInEth, uint256 amountOut, address to) internal override {
+        uint256 fee = (amountInEth * _machineFees[msg.sender].sell) / MAX_FEE;
+        uint256 amountInLessFee = amountInEth - fee;
+        uint256 deadline = block.timestamp + 120;
 
-        // approve exchange for Swapbox
-        _baseToken.approve(address(_pair), amountLessFee);
+        require(_customerBalance[to] >= amountInEth, "SwapboxUniswapV2: insufficient customer balance");
 
-        //call uniswap
-        _pair.swap(amountFiat, minValue, to, new bytes(0));
+        // Path: WETH -> Base Token
+        address[] memory path = new address[](2);
+        path[0] = WETH;
+        path[1] = address(_baseToken);
+        uint[] memory amounts = _router.swapETHForExactTokens{
+            value: amountInLessFee
+        }(
+            amountOut,
+            path,
+            address(this),
+            deadline
+        );
 
-        emit EtherSold(to, amountFiat, minValue);
+
+        uint256 remainingBalance = _customerBalance[to] - amounts[0] - fee;
+        _customerBalance[to] = 0;
+        if (remainingBalance > 0) {
+            payable(to).transfer(remainingBalance);
+        }
+
+
+
+        emit EtherSold(to, amounts[0], amounts[1]);
     }
 }

@@ -47,7 +47,7 @@ abstract contract Swapbox is Ownable {
     mapping(address => Fee) internal _machineFees;
 
     // Customer balances.
-    mapping(address => uint256) internal customerBalance;
+    mapping(address => uint256) internal _customerBalance;
 
     // Set of authorized machines.
     mapping(address => bool) private _authorizedMachines;
@@ -85,7 +85,7 @@ abstract contract Swapbox is Ownable {
      *      it to process a transaction.
      */
     receive() external payable {
-        customerBalance[msg.sender] += msg.value;
+        _customerBalance[msg.sender] += msg.value;
         emit EtherReceived(msg.sender, msg.value);
     }
 
@@ -144,8 +144,8 @@ abstract contract Swapbox is Ownable {
         uint256 sellFee
     ) external onlyOwner {
         // prevents underflow
-        require(_machineFees[msg.sender].buy < MAX_FEE, "Swapbox: buy fee must be under 100%");
-        require(_machineFees[msg.sender].sell < MAX_FEE, "Swapbox: sell fee must be under 100%");
+        require(buyFee < MAX_FEE, "Swapbox: buy fee must be under 100%");
+        require(sellFee < MAX_FEE, "Swapbox: sell fee must be under 100%");
         _machineFees[machineAddress] = Fee(buyFee, sellFee);
     }
 
@@ -221,33 +221,32 @@ abstract contract Swapbox is Ownable {
      * @param user Customer crypto address
      */
     function amountForAddress(address user) public view onlyAuthorizedMachine returns (uint256) {
-        return (customerBalance[user]);
+        return (_customerBalance[user]);
     }
 
     /**
-     * @dev Allows the machine to submit a `baseToken` -> ETH order.
+     * @dev Swap an exact amount of its own base tokens for ETH, which will be
+     * transferred to the user.
      *
-     * @param amountFiat    Amount of fiat machine reports to have received (18 decimal places).
-     * @param minValue      Minimum amount to be received.
-     * @param to            Receiving address.
+     * @param   amountIn        Cash in
+     * @param   amountOutMin    Min amount user should receive, revert if not able to do so
+     * @param   to              Address that will receive ETH
      */
-    function buyEth(
-        uint256 amountFiat,
-        uint256 minValue,
-        address to
-    ) external onlyAuthorizedMachine {
-        _buyEth(amountFiat, minValue, to);
+    function buyEth(uint256 amountIn, uint256 amountOutMin, address to) external onlyAuthorizedMachine {
+        _buyEth(amountIn, amountOutMin, to);
     }
 
     /**
-     * @dev Allows the machine to submit a ETH -> `baseToken` order.
+     * @dev Swap ETH for an exact amount of base tokens. User must have sent the
+     * ETH in advance for this to work. User will be refunded all its remaining
+     * balance.
      *
-     * @param amountFiat    Amount of fiat machine reports to have received (18 decimal places).
-     * @param minValue      Minimum amount to be received.
-     * @param to            Receiving address.
-    */
-    function sellEth(uint256 amountFiat, uint256 minValue, address to) external onlyAuthorizedMachine {
-        _sellEth(amountFiat, minValue, to);
+     * @param   amountInEth     Amount of ETH to be swapped.
+     * @param   amountOut       Amount of base tokens to receive.
+     * @param   to              Address that will be refunded if needed.
+     */
+    function sellEth(uint256 amountInEth, uint256 amountOut, address to) external onlyAuthorizedMachine {
+        _sellEth(amountInEth, amountOut, to);
     }
 
     /**
@@ -265,8 +264,8 @@ abstract contract Swapbox is Ownable {
      * @param amount Refund amount
      */
     function refund(uint256 amount) public {
-        require(customerBalance[msg.sender] > amount, "Swapbox: cannot refund more than the balance");
-        customerBalance[msg.sender] -= amount;
+        require(_customerBalance[msg.sender] > amount, "Swapbox: cannot refund more than the balance");
+        _customerBalance[msg.sender] -= amount;
         payable(msg.sender).transfer(amount);
         emit EtherRefunded(msg.sender, amount);
     }
@@ -274,10 +273,10 @@ abstract contract Swapbox is Ownable {
     /**
      * @dev Must be implemented by concrete Swapbox instance.
      */
-    function _buyEth(uint256 amountFiat, uint256 minValue, address to) internal virtual;
+    function _buyEth(uint256 amountIn, uint256 amountOutMin, address to) internal virtual;
 
     /**
      * @dev Must be implemented by concrete Swapbox instance.
      */
-    function _sellEth(uint256 amountFiat, uint256 minValue, address to) internal virtual;
+    function _sellEth(uint256 amountInEth, uint256 amountOut, address to) internal virtual;
 }

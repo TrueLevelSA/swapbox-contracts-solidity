@@ -35,7 +35,8 @@
   "scripts": {
     "clean": "yarn hardhat clean && rm -rf ./typechain ./dist",
     "deploy": "yarn tsc && yarn hardhat run dist/scripts/deploy.js --network localhost",
-    "compile": "hardhat compile"
+    "compile": "hardhat compile",
+    "test": "hardhat test"
   },
   "repository": {
     "type": "git",

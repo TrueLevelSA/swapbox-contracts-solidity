@@ -17,7 +17,7 @@
 import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
 import chai from 'chai';
 import {solidity} from 'ethereum-waffle';
-import {ethers} from "hardhat";
+import {ethers, tracer} from "hardhat";
 import {deployMintableToken} from "../scripts/deploy";
 import {ERC20, ERC20__factory, IWETH, IWETH__factory, SwapboxUniswapV2} from '../typechain';
 import {deploySwapboxUniswapV2, deployUniswapV2, UniswapEnv, WETH_ADDRESS,} from "../scripts/deploy_uniswap_v2";
@@ -120,6 +120,15 @@ describe('SwapBox', async () => {
         expect(isAuthorizedFalse).to.be.false;
     });
 
+    it('should fail to set a fee too high', async () => {
+        const feeTooHigh = 10000;
+        await expect(swapbox.updateMachineFees(machine.address, feeTooHigh, 0))
+            .to.be.revertedWith("Swapbox: buy fee must be under 100%");
+
+        await expect(swapbox.updateMachineFees(machine.address, 0, feeTooHigh))
+            .to.be.revertedWith("Swapbox: sell fee must be under 100%");
+    });
+
     it('should buy ETH through a buyEth order', async () => {
         const amountIn = ethers.utils.parseEther("10");
         const amountOutMin = ethers.utils.parseEther("0.0049");
@@ -150,7 +159,7 @@ describe('SwapBox', async () => {
         expect(tokenBalanceDecrease).to.eq(amountIn);
     });
 
-    it('emit a `BuyEther` event after a buyEth order', async () => {
+    it('emits a `BuyEther` event after a buyEth order', async () => {
         const amountIn = ethers.utils.parseEther("10");
         const amountOutMin = ethers.utils.parseEther("0.0049");
 
@@ -168,7 +177,51 @@ describe('SwapBox', async () => {
             )
         ).to.emit(swapbox, 'EtherBought');
         // can't use .withArgs because we can't know deterministically the amount out.
+
     });
 
     it('transfers the full approved amount');
+
+    it('emits a `SellEther` event after a sellEth order', async () => {
+        const amountEth = ethers.utils.parseEther("0.22");
+        const amountOut = ethers.utils.parseEther("400");
+        await user.sendTransaction({to: swapbox.address, value: amountEth});
+        await swapbox.authorizeMachine(machine.address);
+        swapbox = swapbox.connect(machine);
+        await expect(swapbox.sellEth(amountEth, amountOut, user.address))
+            .to.emit(swapbox, 'EtherSold');
+    });
+
+    it('sells ETH through a sellEth order', async () => {
+        const fees = 50; // 0.5% => 50/10000
+        await swapbox.updateMachineFees(
+            machine.address,
+            fees,
+            fees,
+        )
+
+        const amountEth = ethers.utils.parseEther("0.22");
+        const amountOut = ethers.utils.parseEther("400");
+        const amountFees = amountEth.mul(50).div(10000);
+
+        const swapboxBalanceBefore = await ethers.provider.getBalance(swapbox.address);
+        const swapboxTokenBalanceBefore = await tokenStable.balanceOf(swapbox.address);
+
+        await user.sendTransaction({to: swapbox.address, value: amountEth});
+        const swapboxBalanceAfterSend = await ethers.provider.getBalance(swapbox.address);
+        expect(swapboxBalanceAfterSend).to.equal(swapboxBalanceBefore.add(amountEth));
+
+        await swapbox.authorizeMachine(machine.address);
+        swapbox = swapbox.connect(machine);
+        await swapbox.sellEth(amountEth, amountOut, user.address);
+
+        const swapboxTokenBalanceAfter = await tokenStable.balanceOf(swapbox.address);
+        expect(swapboxTokenBalanceAfter.sub(swapboxTokenBalanceBefore)).to.equal(amountOut);
+
+        const swapboxBalanceAfterSellEth = await ethers.provider.getBalance(swapbox.address);
+        expect(swapboxBalanceAfterSellEth).to.equal(swapboxBalanceBefore.add(amountFees));
+    });
+
+    it('swaps less than the transferred amount');
+
 });
