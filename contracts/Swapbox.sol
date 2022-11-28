@@ -231,9 +231,10 @@ abstract contract Swapbox is Ownable {
      * @param   amountIn        Cash in
      * @param   amountOutMin    Min amount user should receive, revert if not able to do so
      * @param   to              Address that will receive ETH
+     * @param   deadline        Revert if deadline is over when processing
      */
-    function buyEth(uint256 amountIn, uint256 amountOutMin, address to) external onlyAuthorizedMachine {
-        _buyEth(amountIn, amountOutMin, to);
+    function buyEth(uint256 amountIn, uint256 amountOutMin, address to, uint deadline) external onlyAuthorizedMachine {
+        _buyEth(amountIn, amountOutMin, to, deadline);
     }
 
     /**
@@ -244,9 +245,10 @@ abstract contract Swapbox is Ownable {
      * @param   amountInEth     Amount of ETH to be swapped.
      * @param   amountOut       Amount of base tokens to receive.
      * @param   to              Address that will be refunded if needed.
+     * @param   deadline        Revert if deadline is over when processing
      */
-    function sellEth(uint256 amountInEth, uint256 amountOut, address to) external onlyAuthorizedMachine {
-        _sellEth(amountInEth, amountOut, to);
+    function sellEth(uint256 amountInEth, uint256 amountOut, address to, uint deadline) external onlyAuthorizedMachine {
+        _sellEth(amountInEth, amountOut, to, deadline);
     }
 
     /**
@@ -273,10 +275,10 @@ abstract contract Swapbox is Ownable {
     /**
      * @dev Must be implemented by concrete Swapbox instance.
      */
-    function _buyEth(uint256 amountIn, uint256 amountOutMin, address to) internal virtual;
+    function _buyEth(uint256 amountIn, uint256 amountOutMin, address to, uint deadline) internal virtual;
 
     /**
      * @dev Must be implemented by concrete Swapbox instance.
      */
-    function _sellEth(uint256 amountInEth, uint256 amountOut, address to) internal virtual;
+    function _sellEth(uint256 amountInEth, uint256 amountOut, address to, uint deadline) internal virtual;
 }

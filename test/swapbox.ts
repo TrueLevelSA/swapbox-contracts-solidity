@@ -17,12 +17,13 @@
 import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
 import chai from 'chai';
 import {solidity} from 'ethereum-waffle';
-import {ethers, tracer} from "hardhat";
+import {ethers} from "hardhat";
 import {deployMintableToken} from "../scripts/deploy";
 import {ERC20, ERC20__factory, IWETH, IWETH__factory, SwapboxUniswapV2} from '../typechain';
 import {deploySwapboxUniswapV2, deployUniswapV2, UniswapEnv, WETH_ADDRESS,} from "../scripts/deploy_uniswap_v2";
 
-import {ERC20PresetMinterPauser} from '../typechain/ERC20PresetMinterPauser';
+import {ERC20PresetMinterPauser} from '../typechain/ERC20PresetMinterPauser'
+import {longDeadline} from "./utils";
 
 chai.use(solidity);
 const {expect} = chai;
@@ -143,6 +144,7 @@ describe('SwapBox', async () => {
             amountIn,
             amountOutMin,
             user.address,
+            await longDeadline(),
             {
                 gasLimit: 250000
             }
@@ -171,6 +173,7 @@ describe('SwapBox', async () => {
                 amountIn,
                 amountOutMin,
                 user.address,
+                await longDeadline(),
                 {
                     gasLimit: 250000
                 }
@@ -188,7 +191,7 @@ describe('SwapBox', async () => {
         await user.sendTransaction({to: swapbox.address, value: amountEth});
         await swapbox.authorizeMachine(machine.address);
         swapbox = swapbox.connect(machine);
-        await expect(swapbox.sellEth(amountEth, amountOut, user.address))
+        await expect(swapbox.sellEth(amountEth, amountOut, user.address, await longDeadline()))
             .to.emit(swapbox, 'EtherSold');
     });
 
@@ -213,7 +216,7 @@ describe('SwapBox', async () => {
 
         await swapbox.authorizeMachine(machine.address);
         swapbox = swapbox.connect(machine);
-        await swapbox.sellEth(amountEth, amountOut, user.address);
+        await swapbox.sellEth(amountEth, amountOut, user.address, await longDeadline());
 
         const swapboxTokenBalanceAfter = await tokenStable.balanceOf(swapbox.address);
         expect(swapboxTokenBalanceAfter.sub(swapboxTokenBalanceBefore)).to.equal(amountOut);
@@ -224,4 +227,25 @@ describe('SwapBox', async () => {
 
     it('swaps less than the transferred amount');
 
+    it('fails to sell ETH if user hasn\'t transferred any ETH yet', async () => {
+        const amountEth = ethers.utils.parseEther("0.22");
+        const amountOut = ethers.utils.parseEther("400");
+        await swapbox.authorizeMachine(machine.address);
+        swapbox = swapbox.connect(machine);
+        await expect(
+            swapbox.sellEth(amountEth, amountOut, user.address, await longDeadline())
+        ).to.revertedWith("SwapboxUniswapV2: insufficient customer balance");
+    });
+
+    it('fails to buy ETH if the deadline is too short', async () => {
+        const amountEth = ethers.utils.parseEther("0.22");
+        const amountOut = ethers.utils.parseEther("400");
+        await user.sendTransaction({to: swapbox.address, value: amountEth});
+        await swapbox.authorizeMachine(machine.address);
+        swapbox = swapbox.connect(machine);
+        await expect(
+            swapbox.sellEth(amountEth, amountOut, user.address, 0)
+        ).to.revertedWith("UniswapV2Router: EXPIRED");
+
+    });
 });

@@ -55,10 +55,9 @@ contract SwapboxUniswapV2 is Swapbox {
      * @param   amountOutMin    Min amount user should receive, revert if not able to do so
      * @param   to              Address that will receive ETH
      */
-    function _buyEth(uint256 amountIn, uint256 amountOutMin, address to) internal override {
+    function _buyEth(uint256 amountIn, uint256 amountOutMin, address to, uint deadline) internal override {
         uint256 fee = (amountIn * _machineFees[msg.sender].buy) / MAX_FEE;
         uint256 amountInLessFee = amountIn - fee;
-        uint256 deadline = block.timestamp + 120;
 
         require(_baseToken.approve(address(_router), amountInLessFee), "SwapboxUniswapV2: approve failed.");
 
@@ -87,10 +86,9 @@ contract SwapboxUniswapV2 is Swapbox {
      * @param   amountOut       Amount of base tokens to receive.
      * @param   to              Address that will be refunded if needed.
      */
-    function _sellEth(uint256 amountInEth, uint256 amountOut, address to) internal override {
+    function _sellEth(uint256 amountInEth, uint256 amountOut, address to, uint deadline) internal override {
         uint256 fee = (amountInEth * _machineFees[msg.sender].sell) / MAX_FEE;
         uint256 amountInLessFee = amountInEth - fee;
-        uint256 deadline = block.timestamp + 120;
 
         require(_customerBalance[to] >= amountInEth, "SwapboxUniswapV2: insufficient customer balance");
 
